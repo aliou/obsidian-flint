@@ -1,0 +1,40 @@
+{
+  "name": "obsidian-flint",
+  "version": "0.0.0",
+  "description": "An agent inside of your vault",
+  "author": "Aliou Diallo",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "build:dev": "vite build --mode development",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "tsc --noEmit",
+    "lint": "biome check",
+    "format": "biome check --write"
+  },
+  "dependencies": {
+    "@aliou/obsdx-base-ast": "^0.0.6",
+    "@aliou/obsdx-base-engine": "^0.0.6",
+    "@earendil-works/pi-agent-core": "^0.75.1",
+    "@earendil-works/pi-ai": "^0.75.1",
+    "typebox": "^1.1.38"
+  },
+  "devDependencies": {
+    "@aliou/biome-plugins": "^0.8.1",
+    "@aliou/vite-plugin-obsidian": "^0.2.0",
+    "@biomejs/biome": "^2.4.15",
+    "@types/node": "^24.3.0",
+    "lefthook": "^2.1.6",
+    "moment": "^2.29.4",
+    "obsidian": "^1.12.3",
+    "typescript": "^5.7.3",
+    "vite": "^7.2.0",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.1.6"
+  },
+  "peerDependencies": {
+    "moment": "^2.29.4"
+  }
+}

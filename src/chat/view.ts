@@ -1,0 +1,1278 @@
+import type { AgentMessage } from "@earendil-works/pi-agent-core";
+import {
+  ItemView,
+  Keymap,
+  MarkdownRenderer,
+  type Menu,
+  normalizePath,
+  setIcon,
+  TFile,
+  type WorkspaceLeaf,
+} from "obsidian";
+import {
+  buildWikiLinkSuggestions,
+  currentSlashToken,
+  currentWikiLinkContext,
+  decodeXmlValue,
+  expandResolvedWikiLinks,
+  parseSlashCommand,
+  resolvedVaultPathForWikiLink,
+  type SlashCommandSuggestion,
+  splitMiddleText,
+  type WikiLinkSuggestion,
+} from "@/chat/composer-helpers";
+import { ChatViewLayout } from "@/chat/layout";
+import { ModelPickerModal } from "@/chat/model-picker-modal";
+import type { ToolRenderContext } from "@/harness/tools";
+import type FlintPlugin from "@/main";
+import {
+  contentText,
+  findModel,
+  formatCost,
+  formatCount,
+  formatDateTime,
+  formatPercent,
+  safeJson,
+  type ToolRun,
+  VIEW_TYPE,
+} from "@/settings/types";
+import { noticeError } from "@/utils/errors";
+
+type ObsidianAppWithSetting = {
+  setting?: {
+    open: () => void;
+    openTabById?: (id: string) => void;
+  };
+};
+
+const OBSIDIAN_WIKILINK_RE =
+  /<obsidian-wikilink\s+path="([^"]+)">([\s\S]*?)<\/obsidian-wikilink>/gu;
+
+abstract class BaseFlintView extends ItemView {
+  private unsubscribe?: () => void;
+  private messagesEl?: HTMLElement;
+  private historyEl?: HTMLElement;
+  private composerEl?: HTMLElement;
+  private inputEl?: HTMLTextAreaElement;
+  private wikiLinkSuggestionsEl?: HTMLElement;
+  private slashSuggestionsEl?: HTMLElement;
+  private sendButton?: HTMLButtonElement;
+  private cancelButton?: HTMLButtonElement;
+  private clearButton?: HTMLButtonElement;
+  private statsEl?: HTMLElement;
+  private modelMetaEl?: HTMLElement;
+  private mobileStatsEl?: HTMLElement;
+  private mobileModelStateEl?: HTMLElement;
+  private mobileModelChipEl?: HTMLButtonElement;
+  private scrollButton?: HTMLButtonElement;
+  private loadingEl?: HTMLElement;
+  private loadingTimer?: number;
+  private layout?: ChatViewLayout;
+  private loadingFrame = 0;
+  private toolExpansion = new Map<string, boolean>();
+  private autoScroll = true;
+  private renderRaf?: number;
+  private activeScreen: "chat" | "history" = "chat";
+  private slashSuggestions: SlashCommandSuggestion[] = [];
+  private selectedSlashSuggestion = 0;
+  private wikiLinkSuggestions: WikiLinkSuggestion[] = [];
+  private selectedWikiLinkSuggestion = 0;
+  private resolvedWikiLinkPaths = new Map<string, string>();
+
+  private static readonly LOADING_FRAMES = ["~", "≈", "∼", "≋"];
+
+  protected abstract readonly viewClass: string;
+  protected abstract readonly submitOnEnter: boolean;
+  protected abstract readonly submitShortcutLabel: string;
+
+  constructor(
+    leaf: WorkspaceLeaf,
+    private readonly plugin: FlintPlugin,
+  ) {
+    super(leaf);
+    this.icon = "flint-logo";
+  }
+
+  getViewType(): string {
+    return VIEW_TYPE;
+  }
+
+  getDisplayText(): string {
+    return this.plugin.agent?.getSessionTitle() ?? "Flint";
+  }
+
+  protected async onOpen(): Promise<void> {
+    this.containerEl.addClass(this.viewClass);
+    this.contentEl.empty();
+    this.contentEl.addClass("pi-chat-root");
+
+    this.renderHeader();
+    this.renderMobileStatus();
+    this.renderMessagesContainer();
+    this.renderComposer();
+    this.layout = new ChatViewLayout(this.containerEl, this.app.workspace);
+
+    this.unsubscribe = this.plugin.store.onChange(() => this.scheduleRender());
+    this.render();
+  }
+
+  protected async onClose(): Promise<void> {
+    this.containerEl.removeClass(this.viewClass);
+    this.unsubscribe?.();
+    this.stopLoadingTimer();
+    this.layout?.destroy();
+    this.layout = undefined;
+    if (this.renderRaf != null) window.cancelAnimationFrame(this.renderRaf);
+  }
+
+  private scheduleRender(): void {
+    if (this.renderRaf != null) return;
+    this.renderRaf = window.requestAnimationFrame(() => {
+      this.renderRaf = undefined;
+      this.render();
+      this.layout?.syncStatusBarClearance();
+    });
+  }
+
+  private renderHeader(): void {
+    const header = this.contentEl.createDiv("pi-chat-header");
+    const title = header.createDiv("pi-chat-header-title");
+    title.createSpan({
+      cls: "pi-chat-header-label",
+      text: "Flint",
+    });
+
+    const actions = header.createDiv("pi-chat-header-actions");
+    const historyBtn = actions.createEl("button", {
+      cls: "pi-chat-icon-btn",
+      attr: {
+        type: "button",
+        "aria-label": "Session history",
+        title: "Session history",
+      },
+    });
+    setIcon(historyBtn, "history");
+    historyBtn.addEventListener("click", () => this.showHistory());
+
+    const exportBtn = actions.createEl("button", {
+      cls: "pi-chat-icon-btn",
+      attr: {
+        type: "button",
+        "aria-label": "Export conversation",
+        title: "Export conversation",
+      },
+    });
+    setIcon(exportBtn, "download");
+    exportBtn.addEventListener("click", () => this.exportConversation());
+
+    const newBtn = actions.createEl("button", {
+      cls: "pi-chat-icon-btn",
+      attr: {
+        type: "button",
+        "aria-label": "Start new conversation",
+        title: "Start new conversation",
+      },
+    });
+    setIcon(newBtn, "plus");
+    newBtn.addEventListener("click", () => this.startNewConversation());
+  }
+
+  protected showHistory(): void {
+    this.activeScreen = "history";
+    this.render();
+  }
+
+  protected startNewConversation(): void {
+    this.activeScreen = "chat";
+    void this.plugin.agent.resetChat();
+  }
+
+  protected exportConversation(): void {
+    void this.plugin.exportCurrentConversation();
+  }
+
+  private renderMobileStatus(): void {
+    const status = this.contentEl.createDiv("pi-chat-mobile-status");
+    this.mobileStatsEl = status.createDiv("pi-chat-mobile-session-state");
+    this.mobileModelStateEl = status.createDiv("pi-chat-mobile-model-state");
+  }
+
+  private renderMessagesContainer(): void {
+    const wrapper = this.contentEl.createDiv("pi-chat-messages-wrapper");
+    this.messagesEl = wrapper.createDiv("pi-chat-messages");
+    this.historyEl = wrapper.createDiv("pi-chat-history");
+    this.historyEl.style.display = "none";
+    this.scrollButton = wrapper.createEl("button", {
+      cls: "pi-chat-scroll-bottom",
+      attr: {
+        type: "button",
+        "aria-label": "Scroll to bottom",
+        title: "Scroll to bottom",
+      },
+    });
+    setIcon(this.scrollButton, "arrow-down");
+    this.scrollButton.style.display = "none";
+    this.scrollButton.addEventListener("click", () => {
+      wrapper.scrollTo({ top: wrapper.scrollHeight, behavior: "smooth" });
+      this.autoScroll = true;
+      this.updateScrollButton();
+    });
+    wrapper.addEventListener("scroll", () => {
+      const distanceFromBottom =
+        wrapper.scrollHeight - wrapper.scrollTop - wrapper.clientHeight;
+      this.autoScroll = distanceFromBottom < 32;
+      this.updateScrollButton();
+    });
+  }
+
+  private renderComposer(): void {
+    const composer = this.contentEl.createDiv("pi-chat-composer");
+    this.composerEl = composer;
+
+    this.loadingEl = composer.createDiv("pi-chat-loading");
+    this.loadingEl.style.display = "none";
+    this.loadingEl.createSpan({ cls: "pi-chat-loading-frame", text: "~" });
+    this.loadingEl.createSpan({
+      cls: "pi-chat-loading-label",
+      text: "inferring",
+    });
+
+    this.wikiLinkSuggestionsEl = composer.createDiv(
+      "pi-chat-wikilink-suggestions",
+    );
+    this.wikiLinkSuggestionsEl.style.display = "none";
+
+    this.slashSuggestionsEl = composer.createDiv("pi-chat-slash-suggestions");
+    this.slashSuggestionsEl.style.display = "none";
+
+    const form = composer.createEl("form", { cls: "pi-chat-input-shell" });
+
+    this.inputEl = form.createEl("textarea", {
+      cls: "pi-chat-input",
+      attr: { rows: "3", placeholder: "Message..." },
+    });
+    this.inputEl.addEventListener("keydown", (event) => {
+      if (this.handleWikiLinkSuggestionKeydown(event)) return;
+      if (this.handleSlashSuggestionKeydown(event)) return;
+      const isPlainEnter =
+        this.submitOnEnter &&
+        event.key === "Enter" &&
+        !event.shiftKey &&
+        !event.metaKey &&
+        !event.ctrlKey;
+      const isCommandEnter =
+        !this.submitOnEnter &&
+        event.key === "Enter" &&
+        !event.shiftKey &&
+        (event.metaKey || event.ctrlKey);
+      if (!isPlainEnter && !isCommandEnter) return;
+      event.preventDefault();
+      form.requestSubmit();
+    });
+    this.inputEl.addEventListener("input", () => {
+      this.updateComposerButtons();
+      this.renderComposerSuggestions();
+    });
+
+    const bar = form.createDiv("pi-chat-input-bar");
+    this.mobileModelChipEl = bar.createEl("button", {
+      cls: "pi-chat-model-chip",
+      attr: {
+        type: "button",
+        "aria-label": "Select model",
+        title: "Select model",
+      },
+    });
+    this.mobileModelChipEl.addEventListener("click", () => {
+      new ModelPickerModal(this.plugin).open();
+    });
+
+    this.clearButton = bar.createEl("button", {
+      cls: "pi-chat-icon-btn pi-chat-clear",
+      attr: {
+        type: "button",
+        "aria-label": "Clear input",
+        title: "Clear input",
+      },
+    });
+    setIcon(this.clearButton, "x");
+    this.clearButton.addEventListener("click", () => {
+      if (!this.inputEl) return;
+      this.inputEl.value = "";
+      this.inputEl.focus();
+      this.updateComposerButtons();
+    });
+
+    this.cancelButton = bar.createEl("button", {
+      cls: "pi-chat-icon-btn pi-chat-cancel",
+      attr: {
+        type: "button",
+        "aria-label": "Stop generating",
+        title: "Stop generating",
+      },
+    });
+    setIcon(this.cancelButton, "stop-circle");
+    this.cancelButton.addEventListener(
+      "click",
+      () => void this.plugin.agent.abortChat(),
+    );
+
+    this.sendButton = bar.createEl("button", {
+      cls: "pi-chat-icon-btn pi-chat-send",
+      attr: {
+        type: "submit",
+        "aria-label": `Send message (${this.submitShortcutLabel})`,
+        title: `Send message (${this.submitShortcutLabel})`,
+      },
+    });
+    setIcon(this.sendButton, "corner-down-left");
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const text = this.inputEl?.value.trim();
+      const isRunning = this.plugin.agent.isRunning;
+      if (!text) {
+        if (isRunning) void this.plugin.agent.abortChat();
+        return;
+      }
+      if (this.inputEl) {
+        this.inputEl.value = "";
+        this.hideComposerSuggestions();
+        this.updateComposerButtons();
+      }
+      this.autoScroll = true;
+      const modelText = expandResolvedWikiLinks(
+        text,
+        this.resolvedWikiLinkPaths,
+      );
+      this.resolvedWikiLinkPaths.clear();
+      const action = this.submitPromptText(modelText, isRunning);
+      void action.catch((error) => noticeError(error));
+    });
+
+    const metaRow = composer.createDiv("pi-chat-meta-row");
+    this.statsEl = metaRow.createDiv("pi-chat-session-state");
+    this.modelMetaEl = metaRow.createDiv("pi-chat-model-state");
+
+    setTimeout(() => this.inputEl?.focus(), 0);
+    this.updateComposerButtons();
+  }
+
+  private async submitPromptText(
+    text: string,
+    isRunning: boolean,
+  ): Promise<void> {
+    const slash = parseSlashCommand(text);
+    if (slash?.command === "compact") {
+      await this.plugin.agent.compactSession(slash.args);
+      return;
+    }
+    if (slash?.command === "reload") {
+      if (this.plugin.agent.isRunning) return;
+      await this.plugin.agent.reloadHarness();
+      return;
+    }
+    if (slash?.command === "skill") {
+      await this.plugin.agent.runSkill(slash.name, slash.args);
+      return;
+    }
+    await (isRunning
+      ? this.plugin.agent.steerPrompt(text)
+      : this.plugin.agent.sendPrompt(text));
+  }
+
+  private renderComposerSuggestions(): void {
+    this.renderWikiLinkSuggestions();
+    if (this.wikiLinkSuggestions.length > 0) {
+      this.hideSlashSuggestions();
+      return;
+    }
+    this.renderSlashSuggestions();
+  }
+
+  private hideComposerSuggestions(): void {
+    this.hideWikiLinkSuggestions();
+    this.hideSlashSuggestions();
+  }
+
+  private renderWikiLinkSuggestions(): void {
+    if (!this.wikiLinkSuggestionsEl) return;
+    const context = currentWikiLinkContext(this.inputEl);
+    if (!context) {
+      this.hideWikiLinkSuggestions();
+      return;
+    }
+
+    this.wikiLinkSuggestions = buildWikiLinkSuggestions(
+      this.app.vault,
+      context.query,
+    );
+    if (this.wikiLinkSuggestions.length === 0) {
+      this.hideWikiLinkSuggestions();
+      return;
+    }
+
+    this.selectedWikiLinkSuggestion = Math.min(
+      this.selectedWikiLinkSuggestion,
+      this.wikiLinkSuggestions.length - 1,
+    );
+    this.wikiLinkSuggestionsEl.empty();
+    this.wikiLinkSuggestionsEl.style.display = "";
+
+    for (const [index, suggestion] of this.wikiLinkSuggestions.entries()) {
+      const item = this.wikiLinkSuggestionsEl.createEl("button", {
+        cls: "pi-chat-wikilink-suggestion",
+        attr: { type: "button" },
+      });
+      item.toggleClass(
+        "is-selected",
+        index === this.selectedWikiLinkSuggestion,
+      );
+      const label = item.createSpan("pi-chat-wikilink-label");
+      label.setAttr("title", suggestion.label);
+      const labelParts = splitMiddleText(suggestion.label);
+      label.createSpan({
+        cls: "pi-chat-wikilink-label-start",
+        text: labelParts.start,
+      });
+      label.createSpan({
+        cls: "pi-chat-wikilink-label-end",
+        text: labelParts.end,
+      });
+      item.createSpan({
+        cls: "pi-chat-wikilink-description",
+        text: suggestion.directory,
+      });
+      item.addEventListener("click", () => this.applyWikiLinkSuggestion(index));
+    }
+  }
+
+  private handleWikiLinkSuggestionKeydown(event: KeyboardEvent): boolean {
+    if (this.wikiLinkSuggestions.length === 0) return false;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      this.hideWikiLinkSuggestions();
+      return true;
+    }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const direction = event.key === "ArrowDown" ? 1 : -1;
+      this.selectedWikiLinkSuggestion =
+        (this.selectedWikiLinkSuggestion +
+          direction +
+          this.wikiLinkSuggestions.length) %
+        this.wikiLinkSuggestions.length;
+      this.renderWikiLinkSuggestions();
+      return true;
+    }
+    if (event.key === "Enter" || event.key === "Tab") {
+      event.preventDefault();
+      this.applyWikiLinkSuggestion(this.selectedWikiLinkSuggestion);
+      return true;
+    }
+    return false;
+  }
+
+  private applyWikiLinkSuggestion(index: number): void {
+    const suggestion = this.wikiLinkSuggestions[index];
+    const context = currentWikiLinkContext(this.inputEl);
+    if (!suggestion || !context || !this.inputEl) return;
+
+    const before = this.inputEl.value.slice(0, context.start);
+    const after = this.inputEl.value.slice(this.inputEl.selectionStart);
+    const visibleLink = `[[${suggestion.target}]]`;
+    this.resolvedWikiLinkPaths.set(
+      suggestion.target,
+      resolvedVaultPathForWikiLink(suggestion.file),
+    );
+    this.inputEl.value = `${before}${visibleLink}${after}`;
+    const cursor = before.length + visibleLink.length;
+    this.inputEl.selectionStart = cursor;
+    this.inputEl.selectionEnd = cursor;
+    this.inputEl.focus();
+    this.hideWikiLinkSuggestions();
+    this.updateComposerButtons();
+  }
+
+  private hideWikiLinkSuggestions(): void {
+    this.wikiLinkSuggestions = [];
+    this.selectedWikiLinkSuggestion = 0;
+    this.wikiLinkSuggestionsEl?.empty();
+    if (this.wikiLinkSuggestionsEl)
+      this.wikiLinkSuggestionsEl.style.display = "none";
+  }
+
+  private buildSlashSuggestions(query: string): SlashCommandSuggestion[] {
+    const normalized = query.toLowerCase().replace(/^\//, "");
+    const commands: SlashCommandSuggestion[] = [
+      {
+        command: "/compact",
+        label: "/compact",
+        description: "Compact the current conversation",
+        kind: "action",
+      },
+      {
+        command: "/reload",
+        label: "/reload",
+        description: "Reload harness to pick up resource changes",
+        kind: "action",
+      },
+      ...this.plugin.agent.getSkills().map((skill) => ({
+        command: `/skill:${skill.name}`,
+        label: `/skill:${skill.name}`,
+        description: skill.description,
+        kind: "skill" as const,
+      })),
+    ];
+    return commands
+      .filter((item) => item.command.toLowerCase().includes(normalized))
+      .slice(0, 8);
+  }
+
+  private renderSlashSuggestions(): void {
+    if (!this.slashSuggestionsEl) return;
+    const token = currentSlashToken(this.inputEl);
+    if (!token) {
+      this.slashSuggestions = [];
+      this.selectedSlashSuggestion = 0;
+      this.slashSuggestionsEl.style.display = "none";
+      this.slashSuggestionsEl.empty();
+      return;
+    }
+
+    this.slashSuggestions = this.buildSlashSuggestions(token);
+    if (this.slashSuggestions.length === 0) {
+      this.selectedSlashSuggestion = 0;
+      this.slashSuggestionsEl.style.display = "none";
+      this.slashSuggestionsEl.empty();
+      return;
+    }
+
+    this.selectedSlashSuggestion = Math.min(
+      this.selectedSlashSuggestion,
+      this.slashSuggestions.length - 1,
+    );
+    this.slashSuggestionsEl.empty();
+    this.slashSuggestionsEl.style.display = "";
+
+    for (const [index, suggestion] of this.slashSuggestions.entries()) {
+      const item = this.slashSuggestionsEl.createEl("button", {
+        cls: "pi-chat-slash-suggestion",
+        attr: { type: "button" },
+      });
+      item.toggleClass("is-selected", index === this.selectedSlashSuggestion);
+      item.createSpan({ cls: "pi-chat-slash-label", text: suggestion.label });
+      item.createSpan({
+        cls: "pi-chat-slash-description",
+        text: suggestion.description,
+      });
+      item.addEventListener("click", () => this.applySlashSuggestion(index));
+    }
+  }
+
+  private handleSlashSuggestionKeydown(event: KeyboardEvent): boolean {
+    if (this.slashSuggestions.length === 0) return false;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      this.slashSuggestions = [];
+      this.slashSuggestionsEl?.empty();
+      if (this.slashSuggestionsEl)
+        this.slashSuggestionsEl.style.display = "none";
+      return true;
+    }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const direction = event.key === "ArrowDown" ? 1 : -1;
+      this.selectedSlashSuggestion =
+        (this.selectedSlashSuggestion +
+          direction +
+          this.slashSuggestions.length) %
+        this.slashSuggestions.length;
+      this.renderSlashSuggestions();
+      return true;
+    }
+    if (event.key === "Enter" || event.key === "Tab") {
+      event.preventDefault();
+      this.applySlashSuggestion(this.selectedSlashSuggestion);
+      return true;
+    }
+    return false;
+  }
+
+  private applySlashSuggestion(index: number): void {
+    const suggestion = this.slashSuggestions[index];
+    if (!suggestion || !this.inputEl) return;
+    this.inputEl.value = `${suggestion.command} `;
+    this.inputEl.focus();
+    this.inputEl.selectionStart = this.inputEl.value.length;
+    this.inputEl.selectionEnd = this.inputEl.value.length;
+    this.hideSlashSuggestions();
+    this.updateComposerButtons();
+  }
+
+  private hideSlashSuggestions(): void {
+    this.slashSuggestions = [];
+    this.selectedSlashSuggestion = 0;
+    this.slashSuggestionsEl?.empty();
+    if (this.slashSuggestionsEl) this.slashSuggestionsEl.style.display = "none";
+  }
+
+  private render(): void {
+    this.syncDisplayTitle();
+    if (this.composerEl)
+      this.composerEl.style.display =
+        this.activeScreen === "history" ? "none" : "";
+    this.renderMessages();
+    this.renderHistoryPanel();
+    this.renderLoading();
+    this.renderStats();
+    this.updateComposerButtons();
+  }
+
+  private syncDisplayTitle(): void {
+    const title = this.getDisplayText();
+    const titleEls =
+      this.containerEl.querySelectorAll<HTMLElement>(".view-header-title");
+    for (const titleEl of titleEls) titleEl.setText(title);
+  }
+
+  private renderStats(): void {
+    const stats = this.plugin.agent.getSessionStats();
+    const context =
+      typeof stats.contextPercent === "number" &&
+      typeof stats.contextWindow === "number"
+        ? ` ${formatPercent(stats.contextPercent)}/${formatCount(stats.contextWindow)}`
+        : "";
+    const statsText = `$${formatCost(stats.cost)}${context}`;
+    this.statsEl?.setText(statsText);
+    this.mobileStatsEl?.setText(statsText);
+    const selectedModel = findModel(
+      this.plugin.store.settings.customProviders,
+      this.plugin.store.settings.provider,
+      this.plugin.store.settings.modelId,
+    );
+    const modelName =
+      selectedModel?.name || this.plugin.store.settings.modelId || "no model";
+    const reasoning = selectedModel?.reasoning
+      ? this.plugin.store.settings.thinkingLevel
+      : "off";
+    const provider = this.plugin.store.settings.provider || "no provider";
+    const fullModelLabel = `${provider} · ${modelName} · ${reasoning}`;
+    this.modelMetaEl?.setText(fullModelLabel);
+    this.mobileModelStateEl?.setText(fullModelLabel);
+    if (this.mobileModelChipEl) {
+      const chipLabel =
+        selectedModel?.name || this.plugin.store.settings.modelId || "model";
+      this.mobileModelChipEl.setText(chipLabel);
+      this.mobileModelChipEl.setAttr("title", fullModelLabel);
+      this.mobileModelChipEl.setAttr("aria-label", fullModelLabel);
+    }
+  }
+
+  private renderHistoryPanel(): void {
+    if (!this.historyEl || !this.messagesEl || !this.scrollButton) return;
+    const showingHistory = this.activeScreen === "history";
+    this.historyEl.style.display = showingHistory ? "" : "none";
+    this.messagesEl.style.display = showingHistory ? "none" : "";
+    this.scrollButton.style.display = showingHistory
+      ? "none"
+      : this.scrollButton.style.display;
+    if (!showingHistory) return;
+
+    this.historyEl.empty();
+    const header = this.historyEl.createDiv("pi-chat-history-header");
+    const back = header.createEl("button", {
+      cls: "pi-chat-icon-btn",
+      attr: {
+        type: "button",
+        "aria-label": "Back to chat",
+        title: "Back to chat",
+      },
+    });
+    setIcon(back, "arrow-left");
+    back.addEventListener("click", () => {
+      this.activeScreen = "chat";
+      this.render();
+      this.inputEl?.focus();
+    });
+    header.createDiv({ cls: "pi-chat-history-title", text: "Sessions" });
+
+    const body = this.historyEl.createDiv("pi-chat-history-body");
+    body.createDiv({
+      cls: "pi-chat-history-status",
+      text: "Loading sessions...",
+    });
+    void this.populateHistory(body);
+  }
+
+  private async populateHistory(body: HTMLElement): Promise<void> {
+    try {
+      const allSessions = await this.plugin.agent.listSessions();
+      const sessions = allSessions.filter(
+        (session) => session.messageCount > 0,
+      );
+      body.empty();
+      if (sessions.length === 0) {
+        body.createDiv({
+          cls: "pi-chat-history-empty",
+          text: "No saved sessions yet.",
+        });
+        return;
+      }
+      const list = body.createDiv({
+        cls: "pi-chat-history-list",
+        attr: { role: "listbox", "aria-label": "Session history" },
+      });
+      for (const session of sessions) {
+        const row = list.createDiv("pi-chat-history-row");
+        row.toggleClass(
+          "is-current",
+          session.path === this.plugin.agent.currentSessionPath,
+        );
+        const load = row.createEl("button", {
+          cls: "pi-chat-history-item",
+          attr: {
+            type: "button",
+            role: "option",
+            "aria-selected": String(
+              session.path === this.plugin.agent.currentSessionPath,
+            ),
+          },
+        });
+        load.createDiv({ cls: "pi-chat-session-title", text: session.name });
+        load.createDiv({
+          cls: "pi-chat-session-meta",
+          text: `${session.messageCount} msgs · ${formatDateTime(session.createdAt)}`,
+        });
+        load.addEventListener("click", () => {
+          this.activeScreen = "chat";
+          void this.plugin.agent
+            .resumeSession(session.path)
+            .then(() => this.inputEl?.focus())
+            .catch((error) => noticeError(error));
+        });
+
+        const del = row.createEl("button", {
+          cls: "pi-chat-icon-btn pi-chat-delete-session",
+          attr: {
+            type: "button",
+            "aria-label": `Delete ${session.name}`,
+            title: "Delete session",
+          },
+        });
+        setIcon(del, "trash-2");
+        del.addEventListener("click", () => {
+          if (!window.confirm(`Delete session "${session.name}"?`)) return;
+          void this.plugin.agent
+            .deleteSession(session.path)
+            .then(() => this.render())
+            .catch((error) => noticeError(error));
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      body.empty();
+      body.createDiv({
+        cls: "pi-chat-history-status is-error",
+        text: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  private renderMessages(): void {
+    if (!this.messagesEl) return;
+    const wrapper = this.messagesEl.parentElement;
+    this.messagesEl.empty();
+
+    if (this.activeScreen === "history") return;
+
+    if (
+      this.plugin.agent.messages.length === 0 &&
+      !this.plugin.agent.isRunning
+    ) {
+      this.renderEmptyState();
+      this.updateScrollButton();
+      return;
+    }
+
+    const lastIndex = this.plugin.agent.messages.length - 1;
+    for (const [index, message] of this.plugin.agent.messages.entries()) {
+      this.renderMessage(message, index === lastIndex);
+    }
+
+    if (wrapper && this.autoScroll) wrapper.scrollTop = wrapper.scrollHeight;
+    this.updateScrollButton();
+  }
+
+  private updateScrollButton(): void {
+    const wrapper = this.messagesEl?.parentElement;
+    if (!wrapper || !this.scrollButton) return;
+    const distanceFromBottom =
+      wrapper.scrollHeight - wrapper.scrollTop - wrapper.clientHeight;
+    const show =
+      distanceFromBottom >= 48 && this.plugin.agent.messages.length > 0;
+    this.scrollButton.style.display = show ? "" : "none";
+  }
+
+  private renderMessage(message: AgentMessage, isLast: boolean): void {
+    if (!this.messagesEl) return;
+    const role = message.role;
+
+    if (role === "user") {
+      const card = this.messagesEl.createDiv("pi-chat-user-message");
+      this.renderUserContent(card, message.content);
+      return;
+    }
+
+    if (role === "assistant" && Array.isArray(message.content)) {
+      const group = this.messagesEl.createDiv("pi-chat-assistant");
+      const isStreaming = isLast && this.plugin.agent.isRunning;
+      const lastTextIndex = (() => {
+        for (let index = message.content.length - 1; index >= 0; index -= 1) {
+          if (message.content[index]?.type === "text") return index;
+        }
+        return -1;
+      })();
+      message.content.forEach((part, index) => {
+        if (part.type === "text") {
+          const useStreaming = isStreaming && index === lastTextIndex;
+          if (useStreaming) this.renderStreamingText(group, part.text);
+          else this.renderMarkdownBlock(group, part.text);
+        } else if (part.type === "thinking") {
+          this.renderThinking(group, part.thinking, !isStreaming);
+        } else if (part.type === "toolCall") {
+          this.renderToolCall(group, part.name, part.id, part.arguments);
+        }
+      });
+      if (message.errorMessage)
+        group.createDiv({ cls: "pi-chat-error", text: message.errorMessage });
+      return;
+    }
+
+    if (role === "toolResult") return;
+
+    const fallback = this.messagesEl.createDiv("pi-chat-assistant");
+    this.renderMarkdownBlock(
+      fallback,
+      "content" in message ? contentText(message.content) : safeJson(message),
+    );
+  }
+
+  private renderUserContent(parent: HTMLElement, content: unknown): void {
+    if (!Array.isArray(content)) {
+      const textEl = parent.createDiv("pi-chat-user-text");
+      this.renderUserText(textEl, contentText(content));
+      return;
+    }
+
+    const text = content
+      .filter(
+        (part): part is { type: "text"; text: string } =>
+          part?.type === "text" && typeof part.text === "string",
+      )
+      .map((part) => part.text)
+      .join("\n");
+    if (text) {
+      const textEl = parent.createDiv("pi-chat-user-text");
+      this.renderUserText(textEl, text);
+    }
+  }
+
+  private renderUserText(parent: HTMLElement, text: string): void {
+    OBSIDIAN_WIKILINK_RE.lastIndex = 0;
+    let cursor = 0;
+    let match = OBSIDIAN_WIKILINK_RE.exec(text);
+    while (match !== null) {
+      if (match.index > cursor)
+        parent.appendText(text.slice(cursor, match.index));
+      this.renderObsidianWikilink(
+        parent,
+        decodeXmlValue(match[1] ?? ""),
+        decodeXmlValue(match[2] ?? ""),
+      );
+      cursor = match.index + match[0].length;
+      match = OBSIDIAN_WIKILINK_RE.exec(text);
+    }
+    if (cursor < text.length) parent.appendText(text.slice(cursor));
+  }
+
+  private renderObsidianWikilink(
+    parent: HTMLElement,
+    path: string,
+    label: string,
+  ): void {
+    const linkPath = normalizePath(path.replace(/^\/+/, ""));
+    const linkEl = parent.createEl("a", {
+      cls: "internal-link",
+      text: `[[${label}]]`,
+      attr: {
+        href: linkPath,
+        "data-href": linkPath,
+      },
+    });
+
+    this.registerDomEvent(linkEl, "click", (event) => {
+      if (event.button !== 0 && event.button !== 1) return;
+      event.preventDefault();
+      void this.app.workspace.openLinkText(
+        linkPath,
+        "",
+        Keymap.isModEvent(event),
+      );
+    });
+  }
+
+  private renderEmptyState(): void {
+    if (!this.messagesEl) return;
+    const provider = this.plugin.store.settings.provider;
+    const model = this.plugin.store.settings.modelId;
+    const blocked =
+      !provider || !model || !this.plugin.secrets.hasCredential(provider);
+    const empty = this.messagesEl.createDiv("pi-chat-empty");
+    const icon = empty.createDiv("pi-chat-empty-icon");
+    setIcon(icon, blocked ? "alert-triangle" : "flint-logo");
+    empty.createDiv({
+      cls: "pi-chat-empty-title",
+      text: blocked ? "Provider setup needed" : "What can I help with?",
+    });
+    empty.createDiv({
+      cls: "pi-chat-empty-body",
+      text: blocked
+        ? `Configure credentials for ${provider || "a provider"} before starting a conversation.`
+        : "Ask Flint to inspect, explain, or update notes and Bases in this vault.",
+    });
+    if (blocked) {
+      const setup = empty.createEl("button", {
+        cls: "pi-chat-primary-action",
+        text: "Open settings",
+        attr: { type: "button" },
+      });
+      setup.addEventListener("click", () => this.openSettings());
+      return;
+    }
+    const suggestions = empty.createDiv("pi-chat-suggestions");
+    for (const prompt of this.plugin.store.settings.emptyStateSuggestions) {
+      const chip = suggestions.createEl("button", {
+        cls: "pi-chat-suggestion",
+        text: prompt,
+        attr: { type: "button" },
+      });
+      chip.addEventListener("click", () => {
+        if (!this.inputEl) return;
+        this.inputEl.value = prompt;
+        this.inputEl.focus();
+        this.updateComposerButtons();
+      });
+    }
+  }
+
+  private openSettings(): void {
+    const setting = (this.app as ObsidianAppWithSetting).setting;
+    setting?.open();
+    setting?.openTabById?.(this.plugin.manifest.id);
+  }
+
+  private renderMarkdownBlock(parent: HTMLElement, text: string): void {
+    const block = parent.createDiv("pi-chat-markdown");
+    void MarkdownRenderer.render(this.app, text, block, "", this).then(() => {
+      this.linkVaultPaths(block);
+      this.wrapMarkdownTables(block);
+    });
+  }
+
+  private linkVaultPaths(block: HTMLElement): void {
+    const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT, {
+      acceptNode: (node) => {
+        const parent = node.parentElement;
+        if (!parent || !node.textContent?.includes("/")) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        if (parent.closest("a, button, code, pre, textarea")) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
+
+    const textNodes: Text[] = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode as Text);
+
+    const pathPattern = /(^|[\s(])(\/[^\n`'"<>()[\]{}]+)/g;
+    for (const node of textNodes) {
+      const text = node.textContent ?? "";
+      const fragment = document.createDocumentFragment();
+      let lastIndex = 0;
+      let changed = false;
+
+      for (const match of text.matchAll(pathPattern)) {
+        const prefix = match[1] ?? "";
+        const rawCandidate = match[2] ?? "";
+        const start = match.index ?? 0;
+        const pathStart = start + prefix.length;
+        const resolved = this.longestVaultFilePathPrefix(rawCandidate);
+        if (!resolved) continue;
+
+        fragment.appendText(text.slice(lastIndex, pathStart));
+        const link = fragment.createEl("a", {
+          cls: "pi-chat-vault-path-link",
+          text: resolved.displayPath,
+          attr: { href: "#" },
+        });
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          void this.app.workspace.getLeaf(false).openFile(resolved.file);
+        });
+        fragment.appendText(rawCandidate.slice(resolved.displayPath.length));
+        lastIndex = start + rawCandidate.length;
+        changed = true;
+      }
+
+      if (!changed) continue;
+      fragment.appendText(text.slice(lastIndex));
+      node.replaceWith(fragment);
+    }
+  }
+
+  private longestVaultFilePathPrefix(
+    candidate: string,
+  ): { displayPath: string; file: TFile } | undefined {
+    for (let end = candidate.length; end > 1; end -= 1) {
+      const displayPath = candidate.slice(0, end).replace(/[.,;:!?]+$/, "");
+      const file = this.app.vault.getAbstractFileByPath(
+        displayPath.replace(/^\/+/, ""),
+      );
+      if (file instanceof TFile) return { displayPath, file };
+    }
+    return undefined;
+  }
+
+  private wrapMarkdownTables(block: HTMLElement): void {
+    for (const table of Array.from(block.querySelectorAll("table"))) {
+      if (table.closest(".pi-chat-markdown-table-scroll")) continue;
+      const parent = table.parentElement;
+      if (!parent) continue;
+      const wrapper = document.createElement("div");
+      wrapper.className = "pi-chat-markdown-table-scroll";
+      parent.insertBefore(wrapper, table);
+      wrapper.appendChild(table);
+    }
+  }
+
+  private renderStreamingText(parent: HTMLElement, text: string): void {
+    const block = parent.createDiv("pi-chat-markdown pi-chat-streaming-text");
+    block.setText(text);
+  }
+
+  private renderThinking(
+    parent: HTMLElement,
+    text: string,
+    isComplete: boolean,
+  ): void {
+    const details = parent.createEl("details", { cls: "pi-chat-thinking" });
+    const summary = details.createEl("summary");
+    summary.createSpan({
+      cls: isComplete
+        ? "pi-chat-thinking-label is-complete"
+        : "pi-chat-thinking-label is-active",
+      text: isComplete ? "Thinking ✓" : "Thinking…",
+    });
+    const body = details.createDiv("pi-chat-thinking-body");
+    void MarkdownRenderer.render(this.app, text, body, "", this).then(() => {
+      this.linkVaultPaths(body);
+    });
+  }
+
+  private renderToolCall(
+    parent: HTMLElement,
+    name: string,
+    id: string,
+    args: unknown,
+  ): void {
+    const run = this.plugin.agent.toolRuns.get(id);
+    const expanded = this.toolExpansion.get(id) ?? false;
+    const status: ToolRun["status"] = run?.status ?? "running";
+    const wrapper = parent.createDiv(`pi-chat-tool is-${status}`);
+    const adapter = this.plugin.agent.getToolAdapter(name);
+
+    const ctx: ToolRenderContext = {
+      app: this.app,
+      component: this,
+      status,
+      isMobile: this.viewClass === "pi-chat-view-mobile",
+    };
+
+    // --- Header (toggle button) ---
+    const button = wrapper.createEl("button", {
+      cls: "pi-chat-tool-toggle",
+      attr: { type: "button", "aria-expanded": String(expanded) },
+    });
+    button.createSpan({
+      cls: "pi-chat-tool-status",
+      text: status === "running" ? "..." : status,
+    });
+
+    const headerContent = button.createSpan("pi-chat-tool-header-content");
+    if (adapter) {
+      const titleMd = adapter.renderTitle(args, status);
+      void MarkdownRenderer.render(this.app, titleMd, headerContent, "", this);
+    } else {
+      headerContent.createSpan({ cls: "pi-chat-tool-name", text: name });
+    }
+
+    button.createSpan({
+      cls: "pi-chat-tool-caret",
+      text: expanded ? "▴" : "▾",
+    });
+    button.addEventListener("click", () => {
+      this.toolExpansion.set(id, !expanded);
+      this.scheduleRender();
+    });
+
+    if (!expanded) return;
+
+    // --- Body (expanded details) ---
+    const detailsEl = wrapper.createDiv("pi-chat-tool-details");
+    if (adapter) {
+      adapter.renderBody(detailsEl, args, run?.result, ctx);
+    } else {
+      // Fallback for tools not in the registry (old sessions, etc.)
+      if (
+        args &&
+        typeof args === "object" &&
+        Object.keys(args as Record<string, unknown>).length > 0
+      ) {
+        this.renderToolBody(detailsEl, "Arguments", safeJson(args));
+      }
+      if (run?.result !== undefined) {
+        const text =
+          typeof run.result === "string" ? run.result : safeJson(run.result);
+        this.renderToolBody(
+          detailsEl,
+          status === "running"
+            ? "Output (streaming)"
+            : status === "error"
+              ? "Error"
+              : "Output",
+          text,
+          status === "error",
+        );
+      }
+    }
+  }
+
+  private renderToolBody(
+    parent: HTMLElement,
+    label: string,
+    text: string,
+    isError = false,
+  ): void {
+    const section = parent.createDiv("pi-chat-tool-section");
+    section.createDiv({ cls: "pi-chat-tool-section-title", text: label });
+    section.createEl("pre", { cls: isError ? "is-error" : undefined, text });
+  }
+
+  private renderLoading(): void {
+    if (!this.loadingEl) return;
+    if (this.plugin.agent.isRunning) {
+      this.loadingEl.style.display = "";
+      this.startLoadingTimer();
+    } else {
+      this.loadingEl.style.display = "none";
+      this.stopLoadingTimer();
+    }
+  }
+
+  private startLoadingTimer(): void {
+    if (this.loadingTimer != null) return;
+    this.loadingTimer = window.setInterval(() => {
+      this.loadingFrame =
+        (this.loadingFrame + 1) % BaseFlintView.LOADING_FRAMES.length;
+      const frameEl = this.loadingEl?.querySelector(".pi-chat-loading-frame");
+      if (frameEl)
+        frameEl.textContent =
+          BaseFlintView.LOADING_FRAMES[this.loadingFrame] ?? "~";
+    }, 200);
+  }
+
+  private stopLoadingTimer(): void {
+    if (this.loadingTimer != null) {
+      window.clearInterval(this.loadingTimer);
+      this.loadingTimer = undefined;
+    }
+  }
+
+  private updateComposerButtons(): void {
+    const hasText = (this.inputEl?.value.trim().length ?? 0) > 0;
+    const isRunning = this.plugin.agent.isRunning;
+
+    if (this.clearButton)
+      this.clearButton.style.display = hasText ? "" : "none";
+    if (this.cancelButton) this.cancelButton.style.display = "none";
+    if (this.sendButton) {
+      this.sendButton.empty();
+      this.sendButton.style.display = "";
+      this.sendButton.disabled = !hasText && !isRunning;
+      this.sendButton.toggleClass("is-active", hasText || isRunning);
+      if (isRunning && !hasText) {
+        this.sendButton.setAttr("aria-label", "Stop generating");
+        this.sendButton.setAttr("title", "Stop generating");
+        setIcon(this.sendButton, "stop-circle");
+      } else if (isRunning) {
+        this.sendButton.setAttr(
+          "aria-label",
+          `Steer generation (${this.submitShortcutLabel})`,
+        );
+        this.sendButton.setAttr(
+          "title",
+          `Steer generation (${this.submitShortcutLabel})`,
+        );
+        setIcon(this.sendButton, "corner-down-left");
+      } else {
+        this.sendButton.setAttr(
+          "aria-label",
+          `Send message (${this.submitShortcutLabel})`,
+        );
+        this.sendButton.setAttr(
+          "title",
+          `Send message (${this.submitShortcutLabel})`,
+        );
+        setIcon(this.sendButton, "corner-down-left");
+      }
+    }
+  }
+}
+
+export class DesktopFlintView extends BaseFlintView {
+  protected readonly viewClass = "pi-chat-view-desktop";
+  protected readonly submitOnEnter = true;
+  protected readonly submitShortcutLabel = "Enter";
+}
+
+export class MobileFlintView extends BaseFlintView {
+  protected readonly viewClass = "pi-chat-view-mobile";
+  protected readonly submitOnEnter = false;
+  protected readonly submitShortcutLabel = "Cmd+Enter";
+
+  override onPaneMenu(menu: Menu, source: string): void {
+    super.onPaneMenu(menu, source);
+    menu.addSeparator();
+    menu.addItem((item) => {
+      item
+        .setTitle("Session history")
+        .setIcon("history")
+        .onClick(() => this.showHistory());
+    });
+    menu.addItem((item) => {
+      item
+        .setTitle("Export conversation")
+        .setIcon("download")
+        .onClick(() => this.exportConversation());
+    });
+    menu.addItem((item) => {
+      item
+        .setTitle("Start new conversation")
+        .setIcon("plus")
+        .onClick(() => this.startNewConversation());
+    });
+  }
+}
