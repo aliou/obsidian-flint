@@ -1,6 +1,6 @@
 /* Chat view */
 .workspace-leaf-content[data-type='flint-view'] .view-content {
-  padding: 0;
+  padding: 0 !important;
 }
 
 .pi-chat-root {
