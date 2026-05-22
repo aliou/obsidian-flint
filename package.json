@@ -25,6 +25,7 @@
     "@aliou/biome-plugins": "^0.8.1",
     "@aliou/vite-plugin-obsidian": "^0.2.0",
     "@biomejs/biome": "^2.4.15",
+    "@changesets/cli": "^2.31.0",
     "@types/node": "^24.3.0",
     "lefthook": "^2.1.6",
     "moment": "^2.29.4",
