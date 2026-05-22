@@ -37,5 +37,11 @@
   },
   "peerDependencies": {
     "moment": "^2.29.4"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "lefthook"
+    ]
   }
 }

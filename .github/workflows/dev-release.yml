@@ -25,16 +25,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - uses: pnpm/action-setup@v5
+
       - uses: actions/setup-node@v6
         with:
-          node-version: "22"
-          cache: "npm"
+          node-version: "25"
+          cache: "pnpm"
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build dev
-        run: npm run build:dev
+        run: pnpm build:dev
 
       - name: Read package version
         id: pkg
@@ -47,7 +49,6 @@ jobs:
           node <<'NODE'
           const fs = require('fs');
           const manifest = JSON.parse(fs.readFileSync('dist-dev/manifest.json', 'utf8'));
-          // Keep the -next suffix set by manifest.config.ts
           console.log('Dev manifest version:', manifest.version);
           console.log('Dev plugin id:', manifest.id);
           NODE

@@ -35,18 +35,18 @@ Key files:
 Run these before handing off code changes:
 
 ```bash
-npm run check
-npm run lint
-npm run build
+pnpm check
+pnpm lint
+pnpm build
 ```
 
 Useful commands:
 
 ```bash
-npm install
-npm run format
-npm run test
-npm run test:watch
+pnpm install
+pnpm format
+pnpm test
+pnpm test:watch
 ```
 
 The Nix flake provides Node.js 22 and git:

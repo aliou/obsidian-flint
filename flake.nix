@@ -1,5 +1,5 @@
 {
-  description = "pi-agent-obsidian development environment";
+  description = "flint development environment";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -20,7 +20,8 @@
       {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
-            nodejs_22
+            nodejs_25
+            pnpm
             git
           ];
         };

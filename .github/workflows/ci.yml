@@ -16,19 +16,21 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - uses: pnpm/action-setup@v5
+
       - uses: actions/setup-node@v6
         with:
-          node-version: "22"
-          cache: "npm"
+          node-version: "25"
+          cache: "pnpm"
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: npm run lint
+        run: pnpm lint
 
       - name: Typecheck
-        run: npm run check
+        run: pnpm check
 
       - name: Test
-        run: npm run test
+        run: pnpm test

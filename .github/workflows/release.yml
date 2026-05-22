@@ -28,18 +28,20 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: pnpm/action-setup@v5
+
       - uses: actions/setup-node@v6
         with:
-          node-version: "22"
-          cache: "npm"
+          node-version: "25"
+          cache: "pnpm"
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Get release info
         id: release-info
         run: |
-          npx changeset status --output=release.json 2>/dev/null || echo '{"releases":[]}' > release.json
+          pnpm changeset status --output=release.json 2>/dev/null || echo '{"releases":[]}' > release.json
           node <<'NODE'
           const fs = require('fs');
           const release = JSON.parse(fs.readFileSync('release.json', 'utf8'));
@@ -71,7 +73,7 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          version: npx changeset version
+          version: pnpm changeset version
           title: ${{ steps.release-info.outputs.title }}
           commit: ${{ steps.release-info.outputs.commit }}
         env:
@@ -79,7 +81,7 @@ jobs:
 
       - name: Build
         if: steps.changesets.outputs.published == 'true'
-        run: npm run build
+        run: pnpm build
 
       - name: Create GitHub release
         if: steps.changesets.outputs.published == 'true'
