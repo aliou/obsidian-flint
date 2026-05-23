@@ -1762,7 +1762,7 @@ button.pi-chat-model-picker-favorite.is-favorite {
 
 /* Obsidian hides community plugin settings icons by default. */
 .vertical-tab-header-group-items[data-section="community-plugins"]
-  .vertical-tab-nav-item[data-setting-id="flint"]
+  .vertical-tab-nav-item[data-setting-id^="flint"]
   .vertical-tab-nav-item-icon {
   display: flex !important;
 }
