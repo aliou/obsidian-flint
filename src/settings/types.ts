@@ -234,18 +234,57 @@ export function modelsForProvider(
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
-export function ensureValidSelection(settings: FlintSettings): void {
+export function ensureValidSelection(
+  settings: FlintSettings,
+  hasCredential?: (provider: string) => boolean,
+): void {
+  const all = allModels(settings.customProviders);
+  if (all.length === 0) return;
+
+  // First launch: provider and modelId are both empty.
+  // Only auto-select when credential info is available and a configured
+  // provider exists. Otherwise leave empty so the UI shows the setup state.
+  if (!settings.provider && !settings.modelId) {
+    if (hasCredential) {
+      const configured = all.filter((m) => hasCredential(m.provider));
+      if (configured.length > 0) {
+        settings.provider = configured[0].provider;
+        settings.modelId = configured[0].id;
+      }
+    }
+    return;
+  }
+
+  // Current selection is still valid.
   const providerModels = modelsForProvider(
     settings.customProviders,
     settings.provider,
   );
   if (providerModels.some((model) => model.id === settings.modelId)) return;
+
+  // Current model no longer exists – fallback, preferring configured providers.
+  if (hasCredential) {
+    const configured = all.filter((m) => hasCredential(m.provider));
+    const sameProvider = configured.find(
+      (m) => m.provider === settings.provider,
+    );
+    if (sameProvider) {
+      settings.provider = sameProvider.provider;
+      settings.modelId = sameProvider.id;
+      return;
+    }
+    if (configured.length > 0) {
+      settings.provider = configured[0].provider;
+      settings.modelId = configured[0].id;
+      return;
+    }
+  }
+
+  // No configured providers available – fall back to first matching model.
   const fallback =
     providerModels[0] ??
-    allModels(settings.customProviders).find(
-      (m) => m.provider === settings.provider,
-    ) ??
-    allModels(settings.customProviders)[0];
+    all.find((m) => m.provider === settings.provider) ??
+    all[0];
   if (!fallback) return;
   settings.provider = fallback.provider;
   settings.modelId = fallback.id;

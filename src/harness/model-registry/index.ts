@@ -16,10 +16,17 @@ type ModelSink = {
   setModel(provider: string, modelId: string): Promise<void>;
 };
 
+type HasCredentialFn = (provider: string) => boolean;
+
 export class ModelRegistry {
   private modelSink?: ModelSink;
+  private hasCredentialFn?: HasCredentialFn;
 
   constructor(private readonly store: FlintSettingsStore) {}
+
+  setHasCredentialCheck(fn: HasCredentialFn): void {
+    this.hasCredentialFn = fn;
+  }
 
   setModelSink(modelSink: ModelSink): void {
     this.modelSink = modelSink;
@@ -68,17 +75,31 @@ export class ModelRegistry {
     restored?: { provider: string; modelId: string };
     thinkingLevel?: ThinkingLevel;
   }): Promise<{ model: Model<Api>; thinkingLevel: ThinkingLevel }> {
+    const configured = this.configuredModels();
+    if (configured.length === 0)
+      throw new Error(
+        "No configured provider. Open Settings → Providers to add an API key.",
+      );
+
     const restoredModel = options?.restored
       ? this.getModel(options.restored.provider, options.restored.modelId)
       : undefined;
+    const restoredConfigured =
+      restoredModel && this.hasCredentialFn?.(restoredModel.provider) !== false
+        ? restoredModel
+        : undefined;
+    const currentModel = this.getCurrentModel();
+    const currentConfigured =
+      currentModel && this.hasCredentialFn?.(currentModel.provider) !== false
+        ? currentModel
+        : undefined;
     const model =
-      restoredModel ??
-      this.getCurrentModel() ??
-      allModels(this.store.settings.customProviders).find(
+      restoredConfigured ??
+      currentConfigured ??
+      configured.find(
         (candidate) => candidate.provider === this.store.settings.provider,
       ) ??
-      allModels(this.store.settings.customProviders)[0];
-    if (!model) throw new Error("No Pi models available");
+      configured[0];
 
     const thinkingLevel = model.reasoning
       ? (options?.thinkingLevel ?? this.store.settings.thinkingLevel)
@@ -89,6 +110,39 @@ export class ModelRegistry {
       thinkingLevel,
     });
     return { model, thinkingLevel };
+  }
+
+  /** Auto-select the first configured provider if the current one is not
+   *  configured, or clear the selection when no provider has credentials. */
+  async ensureConfiguredSelection(): Promise<void> {
+    if (!this.hasCredentialFn) return;
+
+    const currentProvider = this.store.settings.provider;
+    const currentConfigured =
+      currentProvider && this.hasCredentialFn(currentProvider);
+    if (currentConfigured) return;
+
+    const configured = this.configuredModels();
+    if (configured.length > 0) {
+      const fallback = configured[0];
+      this.store.settings.provider = fallback.provider;
+      this.store.settings.modelId = fallback.id;
+      if (!fallback.reasoning) this.store.settings.thinkingLevel = "off";
+      await this.store.save();
+      await this.modelSink?.setModel(fallback.provider, fallback.id);
+      this.store.notifyChange();
+    } else {
+      this.store.settings.provider = "";
+      this.store.settings.modelId = "";
+      await this.store.save();
+      this.store.notifyChange();
+    }
+  }
+
+  private configuredModels(): Model<Api>[] {
+    const all = allModels(this.store.settings.customProviders);
+    if (!this.hasCredentialFn) return all;
+    return all.filter((m) => this.hasCredentialFn?.(m.provider));
   }
 
   isFavoriteModel(provider: string, modelId: string): boolean {
@@ -167,12 +221,13 @@ export class ModelRegistry {
       a.id.localeCompare(b.id),
     );
     this.store.refreshFetchPatch();
-    ensureValidSelection(this.store.settings);
+    ensureValidSelection(this.store.settings, this.hasCredentialFn);
     await this.store.save();
     await this.modelSink?.setModel(
       this.store.settings.provider,
       this.store.settings.modelId,
     );
+    await this.ensureConfiguredSelection();
   }
 
   async removeCustomProvider(providerId: string): Promise<void> {
@@ -182,11 +237,12 @@ export class ModelRegistry {
       );
     delete this.store.settings.providerAuth[providerId];
     this.store.refreshFetchPatch();
-    ensureValidSelection(this.store.settings);
+    ensureValidSelection(this.store.settings, this.hasCredentialFn);
     await this.store.save();
     await this.modelSink?.setModel(
       this.store.settings.provider,
       this.store.settings.modelId,
     );
+    await this.ensureConfiguredSelection();
   }
 }

@@ -4,6 +4,7 @@ import {
   DEFAULT_SETTINGS,
   ensureValidSelection,
   type FlintSettings,
+  modelsForProvider,
   normalizeSettings,
 } from "./types";
 
@@ -59,11 +60,29 @@ export class FlintSettingsStore {
   }
 
   refreshFetchPatch(): void {
-    installObsidianNodeFetch({
-      authlessBaseUrls: this.settings.customProviders
-        .filter((provider) => provider.requiresApiKey === false)
-        .map((provider) => provider.baseUrl),
-    });
+    const authlessBaseUrls: string[] = [];
+
+    // Custom providers marked as authless.
+    for (const provider of this.settings.customProviders) {
+      if (provider.requiresApiKey === false)
+        authlessBaseUrls.push(provider.baseUrl);
+    }
+
+    // Native providers marked as authless via providerAuth.
+    for (const [providerId, auth] of Object.entries(
+      this.settings.providerAuth,
+    )) {
+      if (auth.requiresApiKey === false) {
+        const models = modelsForProvider(
+          this.settings.customProviders,
+          providerId,
+        );
+        if (models.length > 0 && models[0].baseUrl)
+          authlessBaseUrls.push(models[0].baseUrl);
+      }
+    }
+
+    installObsidianNodeFetch({ authlessBaseUrls });
   }
 
   private async clearMissingPreviousAgentDefault(): Promise<void> {

@@ -33,6 +33,16 @@ export default class FlintPlugin extends Plugin {
     await this.store.load();
     this.modelRegistry = new ModelRegistry(this.store);
     this.secrets = new SecretManager(this.app, this.store);
+
+    // Wire credential awareness so model selection respects configured providers.
+    this.modelRegistry.setHasCredentialCheck((provider) =>
+      this.secrets.hasCredential(provider),
+    );
+    this.secrets.setOnCredentialChange(
+      () => void this.modelRegistry.ensureConfiguredSelection(),
+    );
+    await this.modelRegistry.ensureConfiguredSelection();
+
     this.sessionRepo = new ObsidianSessionRepo(
       this.app,
       this.store.settings.sessionStoragePath,

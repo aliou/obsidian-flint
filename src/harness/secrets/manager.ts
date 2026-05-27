@@ -9,10 +9,16 @@ import { AddSecretModal } from "@/settings/views/add-secret-modal";
 import { OBSIDIAN_AUTHLESS_API_KEY } from "@/shims/fetch";
 
 export class SecretManager {
+  private onCredentialChange?: () => void;
+
   constructor(
     private readonly app: App,
     private readonly store: FlintSettingsStore,
   ) {}
+
+  setOnCredentialChange(fn: () => void): void {
+    this.onCredentialChange = fn;
+  }
 
   listSecretIds(): string[] {
     return this.app.secretStorage
@@ -61,15 +67,16 @@ export class SecretManager {
         requiresApiKey: auth.requiresApiKey,
         secretId: auth.secretId,
       };
-      this.store.refreshFetchPatch();
     } else {
       this.store.settings.providerAuth[provider] = {
         requiresApiKey: auth.requiresApiKey,
         secretId: auth.secretId,
       };
     }
+    this.store.refreshFetchPatch();
     await this.store.save();
     this.store.notifyChange();
+    this.onCredentialChange?.();
   }
 
   openAddSecretModal(onSaved: (secretId: string) => void): void {
