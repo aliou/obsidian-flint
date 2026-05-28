@@ -5,22 +5,21 @@ on:
     workflows: ["CI"]
     types: [completed]
     branches: [main]
+  push:
+    tags: ["v*"]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  release:
-    name: Release
-    if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      startsWith(github.event.workflow_run.head_commit.message, 'chore: release')
+  version:
+    name: Version PR
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
-      id-token: write
 
     steps:
       - name: Checkout
@@ -69,8 +68,7 @@ jobs:
           rm -f release.json
         continue-on-error: true
 
-      - name: Create Release PR or Publish
-        id: changesets
+      - name: Create Release PR
         uses: changesets/action@v1
         with:
           version: pnpm changeset version
@@ -79,44 +77,38 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  release:
+    name: GitHub Release
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "25"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Build
-        if: steps.changesets.outputs.published == 'true'
         run: pnpm build
 
       - name: Create GitHub release
-        if: steps.changesets.outputs.published == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
         run: |
-          node <<'NODE'
-          const { execSync } = require("node:child_process");
-
-          const published = JSON.parse(process.env.PUBLISHED_PACKAGES || "[]");
-
-          for (const pkg of published) {
-            const tag = `v${pkg.version}`;
-
-            const existing = execSync(`git tag --list ${tag}`, { encoding: "utf8" }).trim();
-            if (!existing) {
-              execSync(`git tag ${tag}`);
-              execSync(`git push origin ${tag}`);
-            }
-
-            let hasRelease = false;
-            try {
-              const output = execSync(`gh release view ${tag} --json tagName --jq .tagName`, {
-                stdio: ["ignore", "pipe", "ignore"],
-              }).toString().trim();
-              hasRelease = output.length > 0;
-            } catch {
-              hasRelease = false;
-            }
-
-            if (!hasRelease) {
-              execSync(`gh release create ${tag} dist/main.js dist/manifest.json dist/styles.css --title ${tag} --notes "Release ${tag}"`, {
-                stdio: "inherit",
-              });
-            }
-          }
-          NODE
+          TAG="${GITHUB_REF_NAME}"
+          gh release create "${TAG}" \
+            dist/main.js \
+            dist/manifest.json \
+            dist/styles.css \
+            --title "${TAG}" \
+            --notes "Release ${TAG}"
