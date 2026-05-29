@@ -1,6 +1,6 @@
 {
   "name": "obsidian-flint",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "An agent inside of your vault",
   "author": "Aliou Diallo",
   "type": "module",
