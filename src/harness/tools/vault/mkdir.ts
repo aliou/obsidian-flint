@@ -74,7 +74,7 @@ export function createMkdirTool(
     renderBody(el, _args, result, ctx) {
       if (!result) {
         el.createDiv({
-          cls: "pi-chat-tool-section-title",
+          cls: "flint-chat-tool-section-title",
           text: "Creating…",
         });
         return;
@@ -82,24 +82,24 @@ export function createMkdirTool(
       const msg =
         result.content[0]?.type === "text" ? result.content[0].text : "";
       const details = result.details as MkdirDetails | undefined;
-      const section = el.createDiv("pi-chat-tool-section");
+      const section = el.createDiv("flint-chat-tool-section");
 
       if (ctx.status === "error") {
         section.createDiv({
-          cls: "pi-chat-tool-section-title",
+          cls: "flint-chat-tool-section-title",
           text: "Error",
         });
         section.createEl("pre", { cls: "is-error", text: msg });
         return;
       }
 
-      const row = section.createDiv("pi-chat-tool-list-entry");
+      const row = section.createDiv("flint-chat-tool-list-entry");
       row.createSpan({
-        cls: `pi-chat-tool-list-badge is-${details?.created ? "created" : "existing"}`,
+        cls: `flint-chat-tool-list-badge is-${details?.created ? "created" : "existing"}`,
         text: details?.created ? "created" : "existing",
       });
       row.createSpan({
-        cls: "pi-chat-tool-list-path",
+        cls: "flint-chat-tool-list-path",
         text: details?.path ?? _args.path,
       });
     },

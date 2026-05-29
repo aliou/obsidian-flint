@@ -85,37 +85,40 @@ export function createWriteTool(
 
     renderBody(el, _args, result, ctx) {
       if (!result) {
-        el.createDiv({ cls: "pi-chat-tool-section-title", text: "Writing…" });
+        el.createDiv({
+          cls: "flint-chat-tool-section-title",
+          text: "Writing…",
+        });
         return;
       }
       const _msg =
         result.content[0]?.type === "text" ? result.content[0].text : "";
       const details = result.details as WriteDetails | undefined;
-      const section = el.createDiv("pi-chat-tool-section");
+      const section = el.createDiv("flint-chat-tool-section");
       section.createDiv({
-        cls: "pi-chat-tool-section-title",
+        cls: "flint-chat-tool-section-title",
         text: ctx.status === "error" ? "Error" : "Result",
       });
 
-      const row = section.createDiv("pi-chat-tool-list-entry");
+      const row = section.createDiv("flint-chat-tool-list-entry");
       if (details?.overwritten) {
         row.createSpan({
-          cls: "pi-chat-tool-list-badge is-updated",
+          cls: "flint-chat-tool-list-badge is-updated",
           text: "updated",
         });
       } else if (details?.created) {
         row.createSpan({
-          cls: "pi-chat-tool-list-badge is-created",
+          cls: "flint-chat-tool-list-badge is-created",
           text: "created",
         });
       }
       row.createSpan({
-        cls: "pi-chat-tool-list-path",
+        cls: "flint-chat-tool-list-path",
         text: details?.path ?? _args.path,
       });
       if (details?.bytes !== undefined) {
         row.createSpan({
-          cls: "pi-chat-tool-list-meta",
+          cls: "flint-chat-tool-list-meta",
           text: `${details.bytes} bytes`,
         });
       }

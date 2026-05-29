@@ -3,14 +3,14 @@
   padding: 0 !important;
 }
 
-.pi-chat-root {
+.flint-chat-root {
   display: flex;
   flex-direction: column;
   height: 100%;
   background: var(--background-primary);
 }
 
-.pi-chat-header {
+.flint-chat-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -22,7 +22,7 @@
   position: relative;
 }
 
-.pi-chat-header-title {
+.flint-chat-header-title {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -30,13 +30,13 @@
   flex: 1;
 }
 
-.pi-chat-header-label {
+.flint-chat-header-label {
   font-weight: 600;
   font-size: var(--font-ui-small);
   color: var(--text-normal);
 }
 
-.pi-chat-header-status {
+.flint-chat-header-status {
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
   font-family: var(--font-monospace);
@@ -46,17 +46,17 @@
   min-width: 0;
 }
 
-.pi-chat-header-actions {
+.flint-chat-header-actions {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.pi-chat-mobile-status {
+.flint-chat-mobile-status {
   display: none;
 }
 
-.pi-chat-session-menu {
+.flint-chat-session-menu {
   position: absolute;
   top: calc(100% + 4px);
   right: 8px;
@@ -71,20 +71,20 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
 }
 
-.pi-chat-session-menu-status {
+.flint-chat-session-menu-status {
   padding: 6px 8px;
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
 }
 
-.pi-chat-session-menu-status.is-error {
+.flint-chat-session-menu-status.is-error {
   color: var(--text-error);
 }
 
-button.pi-chat-session-item,
-button.pi-chat-session-item:hover,
-button.pi-chat-session-item:focus,
-button.pi-chat-session-item:active {
+button.flint-chat-session-item,
+button.flint-chat-session-item:hover,
+button.flint-chat-session-item:focus,
+button.flint-chat-session-item:active {
   all: unset;
   display: block;
   box-sizing: border-box;
@@ -97,23 +97,23 @@ button.pi-chat-session-item:active {
   cursor: pointer;
 }
 
-button.pi-chat-session-item:hover:not(:disabled) {
+button.flint-chat-session-item:hover:not(:disabled) {
   background: var(--background-modifier-hover) !important;
 }
 
-button.pi-chat-session-item:disabled {
+button.flint-chat-session-item:disabled {
   opacity: 0.55;
   cursor: default;
 }
 
-.pi-chat-history {
+.flint-chat-history {
   min-height: 100%;
   display: flex;
   flex-direction: column;
   padding: 10px;
 }
 
-.pi-chat-history-header {
+.flint-chat-history-header {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -121,38 +121,38 @@ button.pi-chat-session-item:disabled {
   border-bottom: 1px solid var(--background-modifier-border);
 }
 
-.pi-chat-history-title {
+.flint-chat-history-title {
   color: var(--text-normal);
   font-size: var(--font-ui-small);
   font-weight: 600;
 }
 
-.pi-chat-history-body {
+.flint-chat-history-body {
   min-height: 0;
   flex: 1;
   overflow-y: auto;
   padding-top: 10px;
 }
 
-.pi-chat-history-status,
-.pi-chat-history-empty {
+.flint-chat-history-status,
+.flint-chat-history-empty {
   padding: 16px 8px;
   color: var(--text-muted);
   font-size: var(--font-ui-small);
   text-align: center;
 }
 
-.pi-chat-history-status.is-error {
+.flint-chat-history-status.is-error {
   color: var(--text-error);
 }
 
-.pi-chat-history-list {
+.flint-chat-history-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.pi-chat-history-row {
+.flint-chat-history-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
@@ -162,15 +162,15 @@ button.pi-chat-session-item:disabled {
   background: var(--background-primary);
 }
 
-.pi-chat-history-row.is-current {
+.flint-chat-history-row.is-current {
   border-color: var(--interactive-accent);
   background: var(--background-secondary);
 }
 
-button.pi-chat-history-item,
-button.pi-chat-history-item:hover,
-button.pi-chat-history-item:focus,
-button.pi-chat-history-item:active {
+button.flint-chat-history-item,
+button.flint-chat-history-item:hover,
+button.flint-chat-history-item:focus,
+button.flint-chat-history-item:active {
   all: unset;
   box-sizing: border-box;
   min-width: 0;
@@ -178,15 +178,15 @@ button.pi-chat-history-item:active {
   cursor: pointer;
 }
 
-button.pi-chat-history-item:hover {
+button.flint-chat-history-item:hover {
   color: var(--text-normal);
 }
 
-button.pi-chat-delete-session {
+button.flint-chat-delete-session {
   margin-right: 6px !important;
 }
 
-.pi-chat-session-title {
+.flint-chat-session-title {
   color: var(--text-normal);
   font-size: var(--font-ui-smaller);
   font-weight: 600;
@@ -195,7 +195,7 @@ button.pi-chat-delete-session {
   text-overflow: ellipsis;
 }
 
-.pi-chat-session-meta {
+.flint-chat-session-meta {
   margin-top: 2px;
   color: var(--text-muted);
   font-size: 10px;
@@ -204,9 +204,9 @@ button.pi-chat-delete-session {
   text-overflow: ellipsis;
 }
 
-button.pi-chat-icon-btn,
-button.pi-chat-icon-btn:focus,
-button.pi-chat-icon-btn:active {
+button.flint-chat-icon-btn,
+button.flint-chat-icon-btn:focus,
+button.flint-chat-icon-btn:active {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -223,36 +223,36 @@ button.pi-chat-icon-btn:active {
   transition: background-color 0.12s ease, color 0.12s ease;
 }
 
-button.pi-chat-icon-btn:hover:not(:disabled) {
+button.flint-chat-icon-btn:hover:not(:disabled) {
   background: var(--background-modifier-hover) !important;
   color: var(--text-normal);
 }
 
-button.pi-chat-icon-btn:disabled {
+button.flint-chat-icon-btn:disabled {
   color: var(--text-faint);
   cursor: default;
 }
 
-button.pi-chat-icon-btn.is-active {
+button.flint-chat-icon-btn.is-active {
   color: var(--interactive-accent);
 }
 
-.pi-chat-icon-btn .svg-icon {
+.flint-chat-icon-btn .svg-icon {
   width: 16px;
   height: 16px;
 }
 
-.pi-chat-messages-wrapper {
+.flint-chat-messages-wrapper {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   position: relative;
 }
 
-button.pi-chat-scroll-bottom,
-button.pi-chat-scroll-bottom:hover,
-button.pi-chat-scroll-bottom:focus,
-button.pi-chat-scroll-bottom:active {
+button.flint-chat-scroll-bottom,
+button.flint-chat-scroll-bottom:hover,
+button.flint-chat-scroll-bottom:focus,
+button.flint-chat-scroll-bottom:active {
   all: unset;
   position: sticky;
   bottom: 10px;
@@ -274,19 +274,19 @@ button.pi-chat-scroll-bottom:active {
   line-height: 1;
 }
 
-button.pi-chat-scroll-bottom:hover {
+button.flint-chat-scroll-bottom:hover {
   background: var(--background-modifier-hover) !important;
   color: var(--text-normal);
 }
 
-.pi-chat-messages {
+.flint-chat-messages {
   display: flex;
   flex-direction: column;
   gap: 16px;
   padding: 16px;
 }
 
-.pi-chat-empty {
+.flint-chat-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -298,7 +298,7 @@ button.pi-chat-scroll-bottom:hover {
   text-align: center;
 }
 
-.pi-chat-empty-icon {
+.flint-chat-empty-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -311,25 +311,25 @@ button.pi-chat-scroll-bottom:hover {
   background: var(--background-secondary);
 }
 
-.pi-chat-empty-icon .svg-icon {
+.flint-chat-empty-icon .svg-icon {
   width: 22px;
   height: 22px;
 }
 
-.pi-chat-empty-title {
+.flint-chat-empty-title {
   color: var(--text-normal);
   font-size: var(--font-ui-medium);
   font-weight: 600;
   margin-bottom: 6px;
 }
 
-.pi-chat-empty-body {
+.flint-chat-empty-body {
   max-width: 320px;
   color: var(--text-muted);
   line-height: 1.4;
 }
 
-.pi-chat-suggestions {
+.flint-chat-suggestions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -337,10 +337,10 @@ button.pi-chat-scroll-bottom:hover {
   margin-top: 16px;
 }
 
-button.pi-chat-suggestion,
-button.pi-chat-suggestion:hover,
-button.pi-chat-suggestion:focus,
-button.pi-chat-suggestion:active {
+button.flint-chat-suggestion,
+button.flint-chat-suggestion:hover,
+button.flint-chat-suggestion:focus,
+button.flint-chat-suggestion:active {
   border: 1px solid var(--background-modifier-border) !important;
   border-radius: 999px;
   padding: 4px 10px !important;
@@ -350,16 +350,16 @@ button.pi-chat-suggestion:active {
   box-shadow: none !important;
 }
 
-button.pi-chat-suggestion:hover {
+button.flint-chat-suggestion:hover {
   background: var(--background-modifier-hover) !important;
   color: var(--text-normal);
 }
 
-button.pi-chat-primary-action {
+button.flint-chat-primary-action {
   margin-top: 16px;
 }
 
-.pi-chat-user-message {
+.flint-chat-user-message {
   user-select: text;
   border: 1px solid var(--background-modifier-border);
   border-radius: 6px;
@@ -368,14 +368,14 @@ button.pi-chat-primary-action {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-.pi-chat-user-text {
+.flint-chat-user-text {
   white-space: pre-wrap;
   color: var(--text-normal);
   font-size: var(--font-ui-small);
   overflow-wrap: anywhere;
 }
 
-.pi-chat-assistant {
+.flint-chat-assistant {
   user-select: text;
   display: flex;
   flex-direction: column;
@@ -383,42 +383,42 @@ button.pi-chat-primary-action {
   color: var(--text-normal);
 }
 
-.pi-chat-markdown {
+.flint-chat-markdown {
   color: var(--text-normal);
   font-size: var(--font-ui-small);
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
 
-.pi-chat-markdown > :first-child {
+.flint-chat-markdown > :first-child {
   margin-top: 0;
 }
 
-.pi-chat-markdown > :last-child {
+.flint-chat-markdown > :last-child {
   margin-bottom: 0;
 }
 
-.pi-chat-markdown p {
+.flint-chat-markdown p {
   margin: 6px 0;
 }
 
-.pi-chat-vault-path-link {
+.flint-chat-vault-path-link {
   color: var(--link-color, var(--text-accent));
   text-decoration: var(--link-decoration, none);
 }
 
-.pi-chat-vault-path-link:hover {
+.flint-chat-vault-path-link:hover {
   color: var(--link-color-hover, var(--text-accent-hover));
   text-decoration: var(--link-decoration-hover, underline);
 }
 
-.pi-chat-markdown-table-scroll {
+.flint-chat-markdown-table-scroll {
   max-width: 100%;
   margin: 6px 0;
   overflow-x: auto;
 }
 
-.pi-chat-markdown table {
+.flint-chat-markdown table {
   width: max-content;
   min-width: 100%;
   border-collapse: collapse;
@@ -426,7 +426,7 @@ button.pi-chat-primary-action {
   font-size: 11px;
 }
 
-.pi-chat-markdown th {
+.flint-chat-markdown th {
   text-align: left;
   padding: 4px 6px;
   border-bottom: 1px solid var(--background-modifier-border);
@@ -435,7 +435,7 @@ button.pi-chat-primary-action {
   white-space: nowrap;
 }
 
-.pi-chat-markdown td {
+.flint-chat-markdown td {
   padding: 3px 6px;
   border-bottom: 1px solid var(--background-modifier-border);
   color: var(--text-normal);
@@ -445,20 +445,20 @@ button.pi-chat-primary-action {
   white-space: nowrap;
 }
 
-.pi-chat-markdown tbody tr:last-child td {
+.flint-chat-markdown tbody tr:last-child td {
   border-bottom: 0;
 }
 
-body.is-mobile .pi-chat-markdown td {
+body.is-mobile .flint-chat-markdown td {
   max-width: 120px;
 }
 
-.pi-chat-streaming-text {
+.flint-chat-streaming-text {
   white-space: pre-wrap;
   word-wrap: break-word;
 }
 
-.pi-chat-thinking {
+.flint-chat-thinking {
   border: 1px solid var(--background-modifier-border);
   border-radius: 4px;
   padding: 6px 8px;
@@ -467,17 +467,17 @@ body.is-mobile .pi-chat-markdown td {
   color: var(--text-muted);
 }
 
-.pi-chat-thinking > summary {
+.flint-chat-thinking > summary {
   cursor: pointer;
   font-weight: 500;
   list-style: none;
 }
 
-.pi-chat-thinking > summary::-webkit-details-marker {
+.flint-chat-thinking > summary::-webkit-details-marker {
   display: none;
 }
 
-.pi-chat-thinking-label.is-active {
+.flint-chat-thinking-label.is-active {
   background: linear-gradient(
     90deg,
     var(--text-muted) 0%,
@@ -488,30 +488,30 @@ body.is-mobile .pi-chat-markdown td {
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: pi-chat-shimmer 2s linear infinite;
+  animation: flint-chat-shimmer 2s linear infinite;
 }
 
-@keyframes pi-chat-shimmer {
+@keyframes flint-chat-shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
-.pi-chat-thinking-body {
+.flint-chat-thinking-body {
   margin-top: 6px;
   color: var(--text-muted);
   font-family: var(--font-text);
 }
 
-.pi-chat-tool {
+.flint-chat-tool {
   margin: 2px 0;
   font-size: var(--font-ui-small);
   color: var(--text-muted);
 }
 
-button.pi-chat-tool-toggle,
-button.pi-chat-tool-toggle:hover,
-button.pi-chat-tool-toggle:focus,
-button.pi-chat-tool-toggle:active {
+button.flint-chat-tool-toggle,
+button.flint-chat-tool-toggle:hover,
+button.flint-chat-tool-toggle:focus,
+button.flint-chat-tool-toggle:active {
   all: unset;
   box-sizing: border-box;
   display: flex;
@@ -531,12 +531,12 @@ button.pi-chat-tool-toggle:active {
   line-height: 1.35;
 }
 
-button.pi-chat-tool-toggle:hover {
+button.flint-chat-tool-toggle:hover {
   background: var(--background-modifier-hover) !important;
   color: var(--text-normal) !important;
 }
 
-.pi-chat-tool-status {
+.flint-chat-tool-status {
   flex: 0 0 auto;
   min-width: 34px;
   padding: 1px 5px;
@@ -548,19 +548,19 @@ button.pi-chat-tool-toggle:hover {
   text-align: center;
 }
 
-.pi-chat-tool.is-running .pi-chat-tool-status {
+.flint-chat-tool.is-running .flint-chat-tool-status {
   color: var(--text-accent);
 }
 
-.pi-chat-tool.is-done .pi-chat-tool-status {
+.flint-chat-tool.is-done .flint-chat-tool-status {
   color: var(--color-green, #22c55e);
 }
 
-.pi-chat-tool.is-error .pi-chat-tool-status {
+.flint-chat-tool.is-error .flint-chat-tool-status {
   color: var(--text-error);
 }
 
-.pi-chat-tool-name {
+.flint-chat-tool-name {
   min-width: 0;
   color: var(--text-normal);
   font-family: var(--font-monospace);
@@ -570,7 +570,7 @@ button.pi-chat-tool-toggle:hover {
   text-overflow: ellipsis;
 }
 
-.pi-chat-tool-preview {
+.flint-chat-tool-preview {
   min-width: 0;
   flex: 1;
   color: var(--text-faint);
@@ -581,14 +581,14 @@ button.pi-chat-tool-toggle:hover {
   text-overflow: ellipsis;
 }
 
-.pi-chat-tool-caret {
+.flint-chat-tool-caret {
   flex: 0 0 auto;
   font-size: 10px;
   user-select: none;
   color: var(--text-faint);
 }
 
-.pi-chat-tool-header-content {
+.flint-chat-tool-header-content {
   display: inline;
   min-width: 0;
   flex: 1;
@@ -597,12 +597,12 @@ button.pi-chat-tool-toggle:hover {
   line-height: 1.35;
 }
 
-.pi-chat-tool-header-content p {
+.flint-chat-tool-header-content p {
   margin: 0;
   display: inline;
 }
 
-.pi-chat-tool-details {
+.flint-chat-tool-details {
   user-select: text;
   margin: 4px 0 8px;
   display: flex;
@@ -615,23 +615,23 @@ button.pi-chat-tool-toggle:hover {
   overflow: hidden;
 }
 
-.pi-chat-tool-section {
+.flint-chat-tool-section {
   padding: 8px;
   border-top: 1px solid var(--background-modifier-border);
 }
 
-.pi-chat-tool-section:first-child {
+.flint-chat-tool-section:first-child {
   border-top: 0;
 }
 
-.pi-chat-tool-section-title {
+.flint-chat-tool-section-title {
   font-weight: 600;
   color: var(--text-muted);
   margin-bottom: 4px;
   font-size: 10px;
 }
 
-.pi-chat-tool-section pre {
+.flint-chat-tool-section pre {
   margin: 0;
   padding: 0;
   background: transparent;
@@ -646,18 +646,18 @@ button.pi-chat-tool-toggle:hover {
   overflow-y: auto;
 }
 
-.pi-chat-tool-section pre.is-error {
+.flint-chat-tool-section pre.is-error {
   color: var(--text-error);
 }
 
-.pi-chat-tool-table {
+.flint-chat-tool-table {
   width: 100%;
   border-collapse: collapse;
   font-family: var(--font-monospace);
   font-size: 11px;
 }
 
-.pi-chat-tool-table th {
+.flint-chat-tool-table th {
   text-align: left;
   padding: 4px 6px;
   border-bottom: 1px solid var(--background-modifier-border);
@@ -666,7 +666,7 @@ button.pi-chat-tool-toggle:hover {
   white-space: nowrap;
 }
 
-.pi-chat-tool-table td {
+.flint-chat-tool-table td {
   padding: 3px 6px;
   border-bottom: 1px solid var(--background-modifier-border);
   color: var(--text-normal);
@@ -676,21 +676,21 @@ button.pi-chat-tool-toggle:hover {
   white-space: nowrap;
 }
 
-.pi-chat-tool-table tbody tr:last-child td {
+.flint-chat-tool-table tbody tr:last-child td {
   border-bottom: 0;
 }
 
-body.is-mobile .pi-chat-tool-table td {
+body.is-mobile .flint-chat-tool-table td {
   max-width: 120px;
 }
 
-.pi-chat-tool-list {
+.flint-chat-tool-list {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.pi-chat-tool-list-entry {
+.flint-chat-tool-list-entry {
   display: flex;
   align-items: baseline;
   gap: 6px;
@@ -698,7 +698,7 @@ body.is-mobile .pi-chat-tool-table td {
   line-height: 1.4;
 }
 
-.pi-chat-tool-list-badge {
+.flint-chat-tool-list-badge {
   flex: 0 0 auto;
   padding: 0 4px;
   border-radius: 3px;
@@ -709,19 +709,19 @@ body.is-mobile .pi-chat-tool-table td {
   background: var(--background-secondary);
 }
 
-.pi-chat-tool-list-badge.is-directory {
+.flint-chat-tool-list-badge.is-directory {
   color: var(--text-accent);
 }
 
-.pi-chat-tool-list-badge.is-file {
+.flint-chat-tool-list-badge.is-file {
   color: var(--text-normal);
 }
 
-.pi-chat-tool-list-badge.is-error {
+.flint-chat-tool-list-badge.is-error {
   color: var(--text-error);
 }
 
-.pi-chat-tool-list-path {
+.flint-chat-tool-list-path {
   min-width: 0;
   font-family: var(--font-monospace);
   font-size: 11px;
@@ -731,7 +731,7 @@ body.is-mobile .pi-chat-tool-table td {
   white-space: nowrap;
 }
 
-.pi-chat-tool-list-meta {
+.flint-chat-tool-list-meta {
   min-width: 0;
   flex: 1;
   color: var(--text-faint);
@@ -741,7 +741,7 @@ body.is-mobile .pi-chat-tool-table td {
   white-space: nowrap;
 }
 
-.pi-chat-error {
+.flint-chat-error {
   border: 1px solid var(--background-modifier-error);
   border-radius: 4px;
   padding: 6px 8px;
@@ -750,22 +750,22 @@ body.is-mobile .pi-chat-tool-table td {
   background: var(--background-modifier-error-rgb, var(--background-secondary));
 }
 
-.pi-chat-composer {
+.flint-chat-composer {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 4px 8px calc(8px + var(--pi-chat-status-bar-clearance, 0px));
+  padding: 4px 8px calc(8px + var(--flint-chat-status-bar-clearance, 0px));
 }
 
-.pi-chat-controls {
+.flint-chat-controls {
   display: grid;
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr) auto;
   gap: 6px;
 }
 
-.pi-chat-control-select,
-.pi-chat-control-select:hover,
-.pi-chat-control-select:focus {
+.flint-chat-control-select,
+.flint-chat-control-select:hover,
+.flint-chat-control-select:focus {
   width: 100%;
   min-width: 0;
   height: 26px;
@@ -778,12 +778,12 @@ body.is-mobile .pi-chat-tool-table td {
   box-shadow: none;
 }
 
-.pi-chat-control-select:disabled {
+.flint-chat-control-select:disabled {
   color: var(--text-faint);
   opacity: 0.75;
 }
 
-.pi-chat-meta-row {
+.flint-chat-meta-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -795,13 +795,13 @@ body.is-mobile .pi-chat-tool-table td {
   line-height: 1.2;
 }
 
-.pi-chat-session-state {
+.flint-chat-session-state {
   flex: 0 0 auto;
   font-family: var(--font-monospace);
   white-space: nowrap;
 }
 
-.pi-chat-model-state {
+.flint-chat-model-state {
   min-width: 0;
   flex: 1 1 auto;
   color: var(--text-faint);
@@ -811,7 +811,7 @@ body.is-mobile .pi-chat-tool-table td {
   text-overflow: ellipsis;
 }
 
-.pi-chat-loading {
+.flint-chat-loading {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -821,11 +821,11 @@ body.is-mobile .pi-chat-tool-table td {
   color: var(--text-muted);
 }
 
-.pi-chat-loading-frame {
+.flint-chat-loading-frame {
   color: var(--interactive-accent);
 }
 
-.pi-chat-input-shell {
+.flint-chat-input-shell {
   display: flex;
   flex-direction: column;
   border: 1px solid var(--background-modifier-border);
@@ -834,14 +834,14 @@ body.is-mobile .pi-chat-tool-table td {
   transition: border-color 0.12s ease;
 }
 
-.pi-chat-input-shell:focus-within {
+.flint-chat-input-shell:focus-within {
   border-color: var(--interactive-accent);
 }
 
-.pi-chat-input,
-.pi-chat-input:focus,
-.pi-chat-input:hover,
-.pi-chat-input:active {
+.flint-chat-input,
+.flint-chat-input:focus,
+.flint-chat-input:hover,
+.flint-chat-input:active {
   width: 100%;
   min-height: 60px;
   max-height: 160px;
@@ -857,12 +857,12 @@ body.is-mobile .pi-chat-tool-table td {
   border-radius: 8px 8px 0 0;
 }
 
-.pi-chat-input::placeholder {
+.flint-chat-input::placeholder {
   color: var(--text-faint);
 }
 
-.pi-chat-slash-suggestions,
-.pi-chat-wikilink-suggestions {
+.flint-chat-slash-suggestions,
+.flint-chat-wikilink-suggestions {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -873,14 +873,14 @@ body.is-mobile .pi-chat-tool-table td {
   background: var(--background-secondary);
 }
 
-button.pi-chat-slash-suggestion,
-button.pi-chat-slash-suggestion:hover,
-button.pi-chat-slash-suggestion:focus,
-button.pi-chat-slash-suggestion:active,
-button.pi-chat-wikilink-suggestion,
-button.pi-chat-wikilink-suggestion:hover,
-button.pi-chat-wikilink-suggestion:focus,
-button.pi-chat-wikilink-suggestion:active {
+button.flint-chat-slash-suggestion,
+button.flint-chat-slash-suggestion:hover,
+button.flint-chat-slash-suggestion:focus,
+button.flint-chat-slash-suggestion:active,
+button.flint-chat-wikilink-suggestion,
+button.flint-chat-wikilink-suggestion:hover,
+button.flint-chat-wikilink-suggestion:focus,
+button.flint-chat-wikilink-suggestion:active {
   all: unset;
   box-sizing: border-box;
   padding: 5px 7px !important;
@@ -890,42 +890,42 @@ button.pi-chat-wikilink-suggestion:active {
   font-size: var(--font-ui-smaller);
 }
 
-button.pi-chat-slash-suggestion,
-button.pi-chat-slash-suggestion:hover,
-button.pi-chat-slash-suggestion:focus,
-button.pi-chat-slash-suggestion:active {
+button.flint-chat-slash-suggestion,
+button.flint-chat-slash-suggestion:hover,
+button.flint-chat-slash-suggestion:focus,
+button.flint-chat-slash-suggestion:active {
   display: grid;
   grid-template-columns: minmax(0, auto) minmax(0, 1fr);
   gap: 8px;
   align-items: baseline;
 }
 
-button.pi-chat-wikilink-suggestion,
-button.pi-chat-wikilink-suggestion:hover,
-button.pi-chat-wikilink-suggestion:focus,
-button.pi-chat-wikilink-suggestion:active {
+button.flint-chat-wikilink-suggestion,
+button.flint-chat-wikilink-suggestion:hover,
+button.flint-chat-wikilink-suggestion:focus,
+button.flint-chat-wikilink-suggestion:active {
   display: flex;
   flex-direction: column;
   gap: 1px;
   min-width: 0;
 }
 
-button.pi-chat-slash-suggestion:hover,
-button.pi-chat-slash-suggestion.is-selected,
-button.pi-chat-wikilink-suggestion:hover,
-button.pi-chat-wikilink-suggestion.is-selected {
+button.flint-chat-slash-suggestion:hover,
+button.flint-chat-slash-suggestion.is-selected,
+button.flint-chat-wikilink-suggestion:hover,
+button.flint-chat-wikilink-suggestion.is-selected {
   background: var(--background-modifier-hover);
   color: var(--text-normal);
 }
 
-.pi-chat-slash-label,
-.pi-chat-wikilink-label {
+.flint-chat-slash-label,
+.flint-chat-wikilink-label {
   color: var(--text-normal);
   font-family: var(--font-monospace);
   white-space: nowrap;
 }
 
-.pi-chat-wikilink-label {
+.flint-chat-wikilink-label {
   display: flex;
   max-width: 100%;
   min-width: 0;
@@ -933,21 +933,21 @@ button.pi-chat-wikilink-suggestion.is-selected {
   white-space: nowrap;
 }
 
-.pi-chat-wikilink-label-start {
+.flint-chat-wikilink-label-start {
   flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.pi-chat-wikilink-label-end {
+.flint-chat-wikilink-label-end {
   flex: 1 0 auto;
   min-width: fit-content;
   white-space: pre;
 }
 
-.pi-chat-slash-description,
-.pi-chat-wikilink-description {
+.flint-chat-slash-description,
+.flint-chat-wikilink-description {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -955,7 +955,7 @@ button.pi-chat-wikilink-suggestion.is-selected {
   color: var(--text-faint);
 }
 
-.pi-chat-input-bar {
+.flint-chat-input-bar {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -966,23 +966,23 @@ button.pi-chat-wikilink-suggestion.is-selected {
   border-radius: 0 0 8px 8px;
 }
 
-.pi-chat-model-chip {
+.flint-chat-model-chip {
   display: none;
 }
 
-body.is-mobile.pi-chat-mobile-active .mobile-navbar {
+body.is-mobile.flint-chat-mobile-active .mobile-navbar {
   display: none;
 }
 
-.pi-chat-view-mobile .view-content {
+.flint-chat-view-mobile .view-content {
   border-top: 1px solid var(--background-modifier-border);
 }
 
-.pi-chat-view-mobile .pi-chat-header {
+.flint-chat-view-mobile .flint-chat-header {
   display: none;
 }
 
-.pi-chat-view-mobile .pi-chat-mobile-status {
+.flint-chat-view-mobile .flint-chat-mobile-status {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -995,13 +995,13 @@ body.is-mobile.pi-chat-mobile-active .mobile-navbar {
   line-height: 1.2;
 }
 
-.pi-chat-mobile-session-state {
+.flint-chat-mobile-session-state {
   flex: 0 0 auto;
   font-family: var(--font-monospace);
   white-space: nowrap;
 }
 
-.pi-chat-mobile-model-state {
+.flint-chat-mobile-model-state {
   min-width: 0;
   flex: 1 1 auto;
   overflow: hidden;
@@ -1010,41 +1010,41 @@ body.is-mobile.pi-chat-mobile-active .mobile-navbar {
   text-align: right;
 }
 
-.pi-chat-view-mobile .pi-chat-header-actions {
+.flint-chat-view-mobile .flint-chat-header-actions {
   display: none;
 }
 
 body.is-mobile .workspace-leaf-content[data-type='flint-view'] .view-content {
-  padding-bottom: var(--pi-chat-mobile-nav-clearance, 0px);
+  padding-bottom: var(--flint-chat-mobile-nav-clearance, 0px);
 }
 
-body.is-mobile .workspace-leaf-content[data-type='flint-view'].pi-chat-keyboard-open-main .view-content {
+body.is-mobile .workspace-leaf-content[data-type='flint-view'].flint-chat-keyboard-open-main .view-content {
   padding-bottom: 0;
 }
 
-body.is-mobile .workspace-drawer.pi-chat-keyboard-open .workspace-leaf-content[data-type='flint-view'] .view-content {
+body.is-mobile .workspace-drawer.flint-chat-keyboard-open .workspace-leaf-content[data-type='flint-view'] .view-content {
   padding-bottom: var(--safe-area-inset-bottom, 0px);
 }
 
-body.is-mobile .workspace-drawer.pi-chat-keyboard-open .workspace-drawer-header,
-body.is-mobile .workspace-drawer.pi-chat-keyboard-open .workspace-drawer-tab-options,
-body.is-mobile .workspace-leaf-content[data-type='flint-view'].pi-chat-keyboard-open .pi-chat-meta-row,
-body.is-mobile .workspace-leaf-content[data-type='flint-view'].pi-chat-keyboard-open .pi-chat-mobile-status {
+body.is-mobile .workspace-drawer.flint-chat-keyboard-open .workspace-drawer-header,
+body.is-mobile .workspace-drawer.flint-chat-keyboard-open .workspace-drawer-tab-options,
+body.is-mobile .workspace-leaf-content[data-type='flint-view'].flint-chat-keyboard-open .flint-chat-meta-row,
+body.is-mobile .workspace-leaf-content[data-type='flint-view'].flint-chat-keyboard-open .flint-chat-mobile-status {
   display: none !important;
 }
 
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] .pi-chat-composer {
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] .flint-chat-composer {
   gap: 2px;
   padding: 8px 8px 20px;
   background: transparent;
 }
 
-body.is-mobile .workspace-leaf-content[data-type='flint-view'].pi-chat-keyboard-open .pi-chat-composer {
+body.is-mobile .workspace-leaf-content[data-type='flint-view'].flint-chat-keyboard-open .flint-chat-composer {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] .pi-chat-input-shell {
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] .flint-chat-input-shell {
   display: flex;
   flex-direction: column;
   border-radius: 10px;
@@ -1052,10 +1052,10 @@ body.is-mobile .workspace-leaf-content[data-type='flint-view'] .pi-chat-input-sh
   box-shadow: var(--shadow-s);
 }
 
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] .pi-chat-input,
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] .pi-chat-input:focus,
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] .pi-chat-input:hover,
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] .pi-chat-input:active {
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] .flint-chat-input,
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] .flint-chat-input:focus,
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] .flint-chat-input:hover,
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] .flint-chat-input:active {
   height: 42px;
   min-height: 42px;
   max-height: 112px;
@@ -1063,17 +1063,17 @@ body.is-mobile .workspace-leaf-content[data-type='flint-view'] .pi-chat-input:ac
   border-radius: 10px 10px 4px 4px;
 }
 
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] .pi-chat-input-bar {
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] .flint-chat-input-bar {
   align-items: center;
   justify-content: flex-end;
   min-height: 34px;
   padding: 0 6px 6px 8px;
 }
 
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] .pi-chat-model-chip,
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] .pi-chat-model-chip:hover,
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] .pi-chat-model-chip:focus,
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] .pi-chat-model-chip:active {
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] .flint-chat-model-chip,
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] .flint-chat-model-chip:hover,
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] .flint-chat-model-chip:focus,
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] .flint-chat-model-chip:active {
   all: unset;
   box-sizing: border-box;
   display: block;
@@ -1096,63 +1096,63 @@ body.is-mobile .workspace-leaf-content[data-type='flint-view'] .pi-chat-model-ch
   cursor: pointer;
 }
 
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] button.pi-chat-send.is-active,
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] button.pi-chat-send.is-active:hover,
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] button.pi-chat-send.is-active:focus,
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] button.pi-chat-send.is-active:active {
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] button.flint-chat-send.is-active,
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] button.flint-chat-send.is-active:hover,
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] button.flint-chat-send.is-active:focus,
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] button.flint-chat-send.is-active:active {
   border-radius: 999px;
   background: var(--interactive-accent) !important;
   color: var(--text-on-accent);
 }
 
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] .pi-chat-clear,
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] .pi-chat-cancel {
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] .flint-chat-clear,
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] .flint-chat-cancel {
   display: none !important;
 }
 
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] .pi-chat-meta-row {
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] .flint-chat-meta-row {
   display: none;
 }
 
-body.is-mobile .workspace-leaf-content[data-type='flint-view'] .pi-chat-scroll-bottom {
-  margin-bottom: calc(var(--pi-chat-mobile-nav-clearance, 0px) + 10px) !important;
+body.is-mobile .workspace-leaf-content[data-type='flint-view'] .flint-chat-scroll-bottom {
+  margin-bottom: calc(var(--flint-chat-mobile-nav-clearance, 0px) + 10px) !important;
 }
 
-body.is-mobile button.pi-chat-icon-btn,
-body.is-mobile button.pi-chat-icon-btn:focus,
-body.is-mobile button.pi-chat-icon-btn:active {
+body.is-mobile button.flint-chat-icon-btn,
+body.is-mobile button.flint-chat-icon-btn:focus,
+body.is-mobile button.flint-chat-icon-btn:active {
   width: 36px;
   height: 36px;
 }
 
-body.is-mobile .pi-chat-icon-btn .svg-icon {
+body.is-mobile .flint-chat-icon-btn .svg-icon {
   width: 20px;
   height: 20px;
 }
 
-body.is-phone .pi-chat-header {
+body.is-phone .flint-chat-header {
   padding: 6px 10px;
 }
 
-body.is-phone .pi-chat-messages {
+body.is-phone .flint-chat-messages {
   gap: 12px;
   padding: 12px;
 }
 
-body.is-phone .pi-chat-input,
-body.is-phone .pi-chat-input:focus,
-body.is-phone .pi-chat-input:hover,
-body.is-phone .pi-chat-input:active {
+body.is-phone .flint-chat-input,
+body.is-phone .flint-chat-input:focus,
+body.is-phone .flint-chat-input:hover,
+body.is-phone .flint-chat-input:active {
   min-height: 44px;
 }
 
-body.is-phone .pi-chat-model-state {
+body.is-phone .flint-chat-model-state {
   max-width: 58%;
 }
 
-.pi-chat-model-picker-search,
-.pi-chat-model-picker-search:focus,
-.pi-chat-model-picker-search:hover {
+.flint-chat-model-picker-search,
+.flint-chat-model-picker-search:focus,
+.flint-chat-model-picker-search:hover {
   width: 100%;
   margin: 8px 0 4px;
   border: 1px solid var(--background-modifier-border);
@@ -1161,23 +1161,23 @@ body.is-phone .pi-chat-model-state {
   box-shadow: none;
 }
 
-.pi-chat-model-picker-modal .modal {
+.flint-chat-model-picker-modal .modal {
   width: min(560px, calc(100vw - 32px));
 }
 
-.pi-chat-model-picker-modal .modal-title {
+.flint-chat-model-picker-modal .modal-title {
   font-size: var(--font-ui-large);
 }
 
-.pi-chat-model-picker-section {
+.flint-chat-model-picker-section {
   margin-top: 20px;
 }
 
-.pi-chat-model-picker-section:first-of-type {
+.flint-chat-model-picker-section:first-of-type {
   margin-top: 10px;
 }
 
-.pi-chat-model-picker-provider {
+.flint-chat-model-picker-provider {
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -1194,25 +1194,25 @@ body.is-phone .pi-chat-model-state {
   list-style: none;
 }
 
-.pi-chat-model-picker-provider::-webkit-details-marker {
+.flint-chat-model-picker-provider::-webkit-details-marker {
   display: none;
 }
 
-.pi-chat-model-picker-title {
+.flint-chat-model-picker-title {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.pi-chat-model-picker-count {
+.flint-chat-model-picker-count {
   margin-left: auto;
   color: var(--text-faint);
   font-family: var(--font-monospace);
   font-size: 10px;
 }
 
-.pi-chat-model-picker-chevron {
+.flint-chat-model-picker-chevron {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1223,22 +1223,22 @@ body.is-phone .pi-chat-model-state {
   transition: transform 0.15s ease;
 }
 
-.pi-chat-model-picker-chevron .svg-icon {
+.flint-chat-model-picker-chevron .svg-icon {
   width: 12px;
   height: 12px;
 }
 
-.pi-chat-model-picker-section[open] > .pi-chat-model-picker-provider > .pi-chat-model-picker-chevron {
+.flint-chat-model-picker-section[open] > .flint-chat-model-picker-provider > .flint-chat-model-picker-chevron {
   transform: rotate(90deg);
 }
 
-.pi-chat-model-picker-list {
+.flint-chat-model-picker-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.pi-chat-model-picker-row-wrap {
+.flint-chat-model-picker-row-wrap {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 40px;
   gap: 0;
@@ -1249,14 +1249,14 @@ body.is-phone .pi-chat-model-state {
   overflow: hidden;
 }
 
-.pi-chat-model-picker-row-wrap.is-selected {
+.flint-chat-model-picker-row-wrap.is-selected {
   border-color: var(--interactive-accent);
 }
 
-button.pi-chat-model-picker-row,
-button.pi-chat-model-picker-row:hover,
-button.pi-chat-model-picker-row:focus,
-button.pi-chat-model-picker-row:active {
+button.flint-chat-model-picker-row,
+button.flint-chat-model-picker-row:hover,
+button.flint-chat-model-picker-row:focus,
+button.flint-chat-model-picker-row:active {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1273,16 +1273,16 @@ button.pi-chat-model-picker-row:active {
   text-align: left;
 }
 
-.pi-chat-model-picker-row-wrap:hover {
+.flint-chat-model-picker-row-wrap:hover {
   background: var(--background-modifier-hover);
 }
 
-.pi-chat-model-picker-row-text {
+.flint-chat-model-picker-row-text {
   min-width: 0;
   flex: 1 1 auto;
 }
 
-.pi-chat-model-picker-name {
+.flint-chat-model-picker-name {
   font-size: var(--font-ui-small);
   font-weight: 600;
   line-height: 1.25;
@@ -1291,7 +1291,7 @@ button.pi-chat-model-picker-row:active {
   text-overflow: ellipsis;
 }
 
-.pi-chat-model-picker-meta {
+.flint-chat-model-picker-meta {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -1305,28 +1305,28 @@ button.pi-chat-model-picker-row:active {
   overflow: hidden;
 }
 
-.pi-chat-model-picker-context {
+.flint-chat-model-picker-context {
   flex: 0 0 auto;
 }
 
-.pi-chat-model-picker-separator {
+.flint-chat-model-picker-separator {
   flex: 0 0 auto;
   color: var(--text-faint);
 }
 
-.pi-chat-model-picker-meta-item {
+.flint-chat-model-picker-meta-item {
   display: inline-flex;
   align-items: center;
   gap: 3px;
   flex: 0 0 auto;
 }
 
-.pi-chat-model-picker-meta-item .svg-icon {
+.flint-chat-model-picker-meta-item .svg-icon {
   width: 10px;
   height: 10px;
 }
 
-.pi-chat-model-picker-check {
+.flint-chat-model-picker-check {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1336,10 +1336,10 @@ button.pi-chat-model-picker-row:active {
   color: var(--interactive-accent);
 }
 
-button.pi-chat-model-picker-favorite,
-button.pi-chat-model-picker-favorite:hover,
-button.pi-chat-model-picker-favorite:focus,
-button.pi-chat-model-picker-favorite:active {
+button.flint-chat-model-picker-favorite,
+button.flint-chat-model-picker-favorite:hover,
+button.flint-chat-model-picker-favorite:focus,
+button.flint-chat-model-picker-favorite:active {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1355,69 +1355,52 @@ button.pi-chat-model-picker-favorite:active {
   box-shadow: none !important;
 }
 
-button.pi-chat-model-picker-favorite.is-favorite {
+button.flint-chat-model-picker-favorite.is-favorite {
   color: var(--interactive-accent);
 }
 
-.pi-chat-model-picker-empty {
+.flint-chat-model-picker-empty {
   color: var(--text-muted);
   font-size: var(--font-ui-small);
 }
 
-.pi-chat-model-picker-thinking {
+.flint-chat-model-picker-thinking {
   margin-top: 16px;
   border-top: 1px solid var(--background-modifier-border);
   padding-top: 8px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pi-chat-connection-dot.is-running,
-  .pi-chat-thinking-label.is-active {
+  .flint-chat-connection-dot.is-running,
+  .flint-chat-thinking-label.is-active {
     animation: none;
   }
 
-  .pi-chat-model-picker-chevron {
+  .flint-chat-model-picker-chevron {
     transition: none;
   }
 }
 
-.flint-provider-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.flint-provider-card {
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 8px;
-  padding: 10px;
-  background: var(--background-secondary);
-}
-
-.flint-provider-card-header {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.flint-provider-card-title {
-  font-weight: 600;
-}
-
-.flint-provider-card-subtitle,
-.flint-provider-card-meta {
-  color: var(--text-muted);
-  font-size: var(--font-ui-smaller);
-  overflow-wrap: anywhere;
-}
-
-.flint-provider-card-actions,
 .flint-modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
   margin-top: 10px;
+}
+
+.flint-provider-inline-config {
+  margin-top: 8px;
+}
+
+.flint-skills-list {
+  margin-top: 12px;
+}
+
+.flint-skill-folder-path {
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+  font-family: var(--font-monospace);
+  margin-top: 2px;
 }
 
 .flint-provider-modal .setting-item-control {
@@ -1595,26 +1578,6 @@ button.pi-chat-model-picker-favorite.is-favorite {
   margin-top: 12px;
 }
 
-.flint-skill-folder-input {
-  min-width: 0;
-}
-
-.flint-icon-button {
-  min-width: 32px;
-  padding-inline: 10px;
-}
-
-.flint-provider-section {
-  margin-top: 12px;
-}
-
-.flint-provider-section-title {
-  color: var(--text-muted);
-  font-size: var(--font-ui-small);
-  font-weight: 600;
-  margin: 8px 0 4px;
-  text-transform: uppercase;
-}
 
 .flint-export-property-list {
   display: flex;

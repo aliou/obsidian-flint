@@ -367,35 +367,38 @@ export function createReadTool(
 
     renderBody(el, args, result, ctx) {
       if (!result) {
-        el.createDiv({ cls: "pi-chat-tool-section-title", text: "Reading…" });
+        el.createDiv({
+          cls: "flint-chat-tool-section-title",
+          text: "Reading…",
+        });
         return;
       }
       const content =
         result.content[0]?.type === "text" ? result.content[0].text : "";
 
       const details = result.details as ReadDetails | undefined;
-      const section = el.createDiv("pi-chat-tool-section");
+      const section = el.createDiv("flint-chat-tool-section");
 
       // Show properties separately if present.
       if (details?.properties && details.properties.length > 0) {
-        const propSection = section.createDiv("pi-chat-tool-section");
+        const propSection = section.createDiv("flint-chat-tool-section");
         propSection.createDiv({
-          cls: "pi-chat-tool-section-title",
+          cls: "flint-chat-tool-section-title",
           text: `Properties (${details.properties.length})`,
         });
-        const propList = propSection.createDiv("pi-chat-tool-list");
+        const propList = propSection.createDiv("flint-chat-tool-list");
         for (const prop of details.properties) {
-          const row = propList.createDiv("pi-chat-tool-list-entry");
+          const row = propList.createDiv("flint-chat-tool-list-entry");
           row.createSpan({
-            cls: "pi-chat-tool-list-badge is-property",
+            cls: "flint-chat-tool-list-badge is-property",
             text: prop.type,
           });
           row.createSpan({
-            cls: "pi-chat-tool-list-key",
+            cls: "flint-chat-tool-list-key",
             text: prop.name,
           });
           row.createSpan({
-            cls: "pi-chat-tool-list-value",
+            cls: "flint-chat-tool-list-value",
             text: Array.isArray(prop.value)
               ? prop.value.join(", ")
               : String(prop.value),
@@ -405,13 +408,13 @@ export function createReadTool(
 
       // Show body/content.
       section.createDiv({
-        cls: "pi-chat-tool-section-title",
+        cls: "flint-chat-tool-section-title",
         text: args.path,
       });
 
       if (details?.truncated) {
         const notice = section.createDiv({
-          cls: "pi-chat-tool-truncation-notice",
+          cls: "flint-chat-tool-truncation-notice",
         });
         const shown = details.outputLines ?? 0;
         const total = details.totalLines ?? 0;

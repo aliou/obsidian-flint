@@ -215,14 +215,20 @@ export function createQueryBaseTool(
 
     renderBody(el, _args, result, ctx) {
       if (!result) {
-        el.createDiv({ cls: "pi-chat-tool-section-title", text: "Querying…" });
+        el.createDiv({
+          cls: "flint-chat-tool-section-title",
+          text: "Querying…",
+        });
         return;
       }
       if (ctx.status === "error") {
         const msg =
           result.content[0]?.type === "text" ? result.content[0].text : "";
-        const section = el.createDiv("pi-chat-tool-section");
-        section.createDiv({ cls: "pi-chat-tool-section-title", text: "Error" });
+        const section = el.createDiv("flint-chat-tool-section");
+        section.createDiv({
+          cls: "flint-chat-tool-section-title",
+          text: "Error",
+        });
         section.createEl("pre", { cls: "is-error", text: msg });
         return;
       }
@@ -231,7 +237,7 @@ export function createQueryBaseTool(
       const rows = details?.rows;
       if (!rows?.length) {
         el.createDiv({
-          cls: "pi-chat-tool-section",
+          cls: "flint-chat-tool-section",
           text: "No matching rows",
         });
         return;
@@ -239,13 +245,13 @@ export function createQueryBaseTool(
 
       const totalRows = details?.totalRows ?? rows.length;
       const offset = details?.offset ?? 1;
-      const section = el.createDiv("pi-chat-tool-section");
+      const section = el.createDiv("flint-chat-tool-section");
 
       const countText = details?.hasMore
         ? `Rows ${offset}-${offset + rows.length - 1} of ${totalRows}`
         : `${totalRows} row${totalRows === 1 ? "" : "s"}`;
       section.createDiv({
-        cls: "pi-chat-tool-section-title",
+        cls: "flint-chat-tool-section-title",
         text: countText,
       });
 
@@ -253,7 +259,7 @@ export function createQueryBaseTool(
       const visibleColumns = columns.slice(0, ctx.isMobile ? 4 : 8);
       const keys = visibleColumns.map((c) => c.id);
 
-      const table = section.createEl("table", { cls: "pi-chat-tool-table" });
+      const table = section.createEl("table", { cls: "flint-chat-tool-table" });
       const thead = table.createEl("thead");
       const headRow = thead.createEl("tr");
       headRow.createEl("th", { text: "File" });

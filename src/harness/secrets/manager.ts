@@ -5,7 +5,6 @@ import {
   type CustomProviderModelConfig,
   createDefaultModelConfig,
 } from "@/settings/types";
-import { AddSecretModal } from "@/settings/views/add-secret-modal";
 import { OBSIDIAN_AUTHLESS_API_KEY } from "@/shims/fetch";
 
 export class SecretManager {
@@ -38,6 +37,10 @@ export class SecretManager {
     return this.store.settings.providerAuth[provider]?.secretId;
   }
 
+  getProviderProxyUrl(provider: string): string {
+    return this.store.settings.providerAuth[provider]?.proxyBaseUrl ?? "";
+  }
+
   providerRequiresApiKey(provider: string): boolean {
     const customProvider = this.store.settings.customProviders.find(
       (candidate) => candidate.id === provider,
@@ -56,7 +59,11 @@ export class SecretManager {
 
   async setProviderAuth(
     provider: string,
-    auth: { requiresApiKey: boolean; secretId?: string },
+    auth: {
+      requiresApiKey: boolean;
+      secretId?: string;
+      proxyBaseUrl?: string;
+    },
   ): Promise<void> {
     const customIndex = this.store.settings.customProviders.findIndex(
       (candidate) => candidate.id === provider,
@@ -68,19 +75,20 @@ export class SecretManager {
         secretId: auth.secretId,
       };
     } else {
+      const previous = this.store.settings.providerAuth[provider];
       this.store.settings.providerAuth[provider] = {
         requiresApiKey: auth.requiresApiKey,
         secretId: auth.secretId,
+        proxyBaseUrl:
+          auth.proxyBaseUrl !== undefined
+            ? auth.proxyBaseUrl.trim() || undefined
+            : previous?.proxyBaseUrl,
       };
     }
     this.store.refreshFetchPatch();
     await this.store.save();
     this.store.notifyChange();
     this.onCredentialChange?.();
-  }
-
-  openAddSecretModal(onSaved: (secretId: string) => void): void {
-    new AddSecretModal(this.app, onSaved).open();
   }
 
   async discoverOpenAIModels(

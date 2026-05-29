@@ -8,7 +8,7 @@ export default defineManifest(({ mode }) => {
     id: isDev ? `${id}-dev` : id,
     name: isDev ? "Flint (dev)" : "Flint",
     version: isDev ? `${pkg.version}-next` : pkg.version,
-    minAppVersion: "1.11.4",
+    minAppVersion: "1.13.0",
     description: pkg.description,
     author: pkg.author,
     isDesktopOnly: false,

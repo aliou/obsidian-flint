@@ -299,7 +299,7 @@ export function createSearchTool(
     renderBody(el, _args, result, ctx) {
       if (!result) {
         el.createDiv({
-          cls: "pi-chat-tool-section-title",
+          cls: "flint-chat-tool-section-title",
           text: "Searching…",
         });
         return;
@@ -307,9 +307,9 @@ export function createSearchTool(
       if (ctx.status === "error") {
         const msg =
           result.content[0]?.type === "text" ? result.content[0].text : "";
-        const section = el.createDiv("pi-chat-tool-section");
+        const section = el.createDiv("flint-chat-tool-section");
         section.createDiv({
-          cls: "pi-chat-tool-section-title",
+          cls: "flint-chat-tool-section-title",
           text: "Error",
         });
         section.createEl("pre", { cls: "is-error", text: msg });
@@ -320,23 +320,23 @@ export function createSearchTool(
       const matches = details?.matches;
       if (!matches?.length) {
         el.createDiv({
-          cls: "pi-chat-tool-section",
+          cls: "flint-chat-tool-section",
           text: "No matches found",
         });
         return;
       }
 
-      const section = el.createDiv("pi-chat-tool-section");
+      const section = el.createDiv("flint-chat-tool-section");
       const countText = details?.matchLimitReached
         ? `${details.matchLimitReached} of ${details.totalMatches} matches`
         : `${matches.length} match${matches.length === 1 ? "" : "es"}`;
       section.createDiv({
-        cls: "pi-chat-tool-section-title",
+        cls: "flint-chat-tool-section-title",
         text: countText,
       });
 
       const pre = section.createEl("pre", {
-        cls: "pi-chat-tool-search",
+        cls: "flint-chat-tool-search",
       });
       const contentText =
         result.content[0]?.type === "text" ? result.content[0].text : "";

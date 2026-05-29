@@ -121,14 +121,20 @@ export function createListBasesTool(
 
     renderBody(el, _args, result, ctx) {
       if (!result) {
-        el.createDiv({ cls: "pi-chat-tool-section-title", text: "Listing…" });
+        el.createDiv({
+          cls: "flint-chat-tool-section-title",
+          text: "Listing…",
+        });
         return;
       }
       if (ctx.status === "error") {
         const msg =
           result.content[0]?.type === "text" ? result.content[0].text : "";
-        const section = el.createDiv("pi-chat-tool-section");
-        section.createDiv({ cls: "pi-chat-tool-section-title", text: "Error" });
+        const section = el.createDiv("flint-chat-tool-section");
+        section.createDiv({
+          cls: "flint-chat-tool-section-title",
+          text: "Error",
+        });
         section.createEl("pre", { cls: "is-error", text: msg });
         return;
       }
@@ -138,36 +144,39 @@ export function createListBasesTool(
         | undefined;
       const bases = details?.bases;
       if (!bases?.length) {
-        el.createDiv({ cls: "pi-chat-tool-section", text: "No Bases found" });
+        el.createDiv({
+          cls: "flint-chat-tool-section",
+          text: "No Bases found",
+        });
         return;
       }
 
-      const section = el.createDiv("pi-chat-tool-section");
+      const section = el.createDiv("flint-chat-tool-section");
       section.createDiv({
-        cls: "pi-chat-tool-section-title",
+        cls: "flint-chat-tool-section-title",
         text: `${bases.length} Base${bases.length === 1 ? "" : "s"}`,
       });
 
-      const list = section.createDiv("pi-chat-tool-list");
+      const list = section.createDiv("flint-chat-tool-list");
       for (const base of bases) {
-        const row = list.createDiv("pi-chat-tool-list-entry");
+        const row = list.createDiv("flint-chat-tool-list-entry");
         if ("error" in base) {
           row.createSpan({
-            cls: "pi-chat-tool-list-badge is-error",
+            cls: "flint-chat-tool-list-badge is-error",
             text: "error",
           });
           row.createSpan({
-            cls: "pi-chat-tool-list-path",
+            cls: "flint-chat-tool-list-path",
             text: `${base.path} — ${base.error}`,
           });
           continue;
         }
         row.createSpan({
-          cls: "pi-chat-tool-list-badge is-file",
+          cls: "flint-chat-tool-list-badge is-file",
           text: "base",
         });
         row.createSpan({
-          cls: "pi-chat-tool-list-path",
+          cls: "flint-chat-tool-list-path",
           text: base.path,
         });
 
@@ -177,7 +186,7 @@ export function createListBasesTool(
           .join("; ");
         if (viewText) {
           row.createSpan({
-            cls: "pi-chat-tool-list-meta",
+            cls: "flint-chat-tool-list-meta",
             text: viewText,
           });
         }
@@ -185,7 +194,7 @@ export function createListBasesTool(
         // Context badge.
         if (base.requiresContext) {
           row.createSpan({
-            cls: "pi-chat-tool-list-badge is-context",
+            cls: "flint-chat-tool-list-badge is-context",
             text: "ctx",
           });
         }
@@ -193,7 +202,7 @@ export function createListBasesTool(
         // Validation errors.
         if (base.validationErrors.length > 0) {
           row.createSpan({
-            cls: "pi-chat-tool-list-badge is-error",
+            cls: "flint-chat-tool-list-badge is-error",
             text: `${base.validationErrors.length} err`,
           });
         }

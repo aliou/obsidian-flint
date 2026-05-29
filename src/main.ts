@@ -24,6 +24,7 @@ export default class FlintPlugin extends Plugin {
   agent!: AgentController;
   modelRegistry!: ModelRegistry;
   secrets!: SecretManager;
+  settingTab?: FlintSettingsTab;
   private sessionRepo!: ObsidianSessionRepo;
 
   async onload(): Promise<void> {
@@ -53,7 +54,8 @@ export default class FlintPlugin extends Plugin {
         ? new MobileFlintView(leaf, this)
         : new DesktopFlintView(leaf, this),
     );
-    this.addSettingTab(new FlintSettingsTab(this.app, this));
+    this.settingTab = new FlintSettingsTab(this.app, this);
+    this.addSettingTab(this.settingTab);
     this.addRibbonIcon("flint-logo", "Flint", () => void this.openView());
     this.addCommand({
       id: "open-flint",
@@ -139,14 +141,11 @@ export default class FlintPlugin extends Plugin {
     const agentFilePath = normalizePath(this.store.settings.agentFilePath);
     if (agentFilePath && normalizedPath === agentFilePath) return true;
 
-    return this.store.settings.skillFolders.some((folder) => {
-      const normalizedFolder = normalizePath(folder).replace(/\/$/, "");
-      if (!normalizedFolder) return false;
-      return (
-        normalizedPath === normalizePath(`${normalizedFolder}/SKILL.md`) ||
-        normalizedPath.startsWith(`${normalizedFolder}/`)
-      );
-    });
+    // Skills are auto-discovered from every SKILL.md in the vault, so any
+    // SKILL.md change (create/modify/delete/rename) can affect the skill set.
+    return (
+      normalizedPath === "SKILL.md" || normalizedPath.endsWith("/SKILL.md")
+    );
   }
 
   async exportCurrentConversation(): Promise<string | undefined> {

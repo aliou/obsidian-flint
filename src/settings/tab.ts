@@ -1,23 +1,49 @@
-import { type App, type IconName, PluginSettingTab } from "obsidian";
+import {
+  type App,
+  type IconName,
+  PluginSettingTab,
+  type SettingDefinitionItem,
+  SettingPage,
+} from "obsidian";
 import type FlintPlugin from "@/main";
 import { noticeError } from "@/utils/errors";
 import { renderAdvancedTab } from "./tabs/advanced";
-import { renderChatTab } from "./tabs/chat";
+import { renderContextTab } from "./tabs/context";
 import { renderExportsTab } from "./tabs/exports";
-import { type ProvidersTabState, renderProvidersTab } from "./tabs/providers";
-import { renderSkillsTab } from "./tabs/skills";
+import { modelSettingDefinitions } from "./tabs/model";
+import { providerSettingDefinitions } from "./tabs/providers";
 import { renderToolsTab } from "./tabs/tools";
-import type { SettingsPageId, SettingsTabContext } from "./tabs/types";
+import type { SettingsTabContext } from "./tabs/types";
+
+type PageRenderer = (ctx: SettingsTabContext, containerEl: HTMLElement) => void;
+
+/**
+ * Imperative sub-page wrapper for Obsidian 1.13.0's navigable settings API.
+ * Each page reuses an existing render function and rebuilds its own container
+ * on re-render, so the legacy `(ctx, containerEl)` renderers keep working.
+ */
+class FlintSettingPage extends SettingPage {
+  constructor(
+    private readonly tab: FlintSettingsTab,
+    title: string,
+    private readonly render: PageRenderer,
+  ) {
+    super();
+    this.title = title;
+  }
+
+  display(): void {
+    this.containerEl.empty();
+    this.containerEl.addClass("flint-settings-page");
+    this.render(
+      this.tab.pageContext(() => this.display()),
+      this.containerEl,
+    );
+  }
+}
 
 export class FlintSettingsTab extends PluginSettingTab {
   icon: IconName = "flint-logo";
-
-  private activePage: SettingsPageId = "chat";
-  private providersState: ProvidersTabState = {
-    builtinSearch: "",
-    expandedBuiltinProvider: null,
-    customProviderFilter: "",
-  };
 
   constructor(
     app: App,
@@ -26,66 +52,61 @@ export class FlintSettingsTab extends PluginSettingTab {
     super(app, plugin);
   }
 
-  display(): void {
-    const { containerEl } = this;
-    containerEl.empty();
-    containerEl.addClass("flint-settings-page");
-    containerEl.createEl("h2", { text: "Flint" });
-    this.renderNavigation(containerEl);
-
-    const ctx = this.context();
-    if (this.activePage === "chat") renderChatTab(ctx, containerEl);
-    else if (this.activePage === "skills") renderSkillsTab(ctx, containerEl);
-    else if (this.activePage === "tools") renderToolsTab(ctx, containerEl);
-    else if (this.activePage === "exports") renderExportsTab(ctx, containerEl);
-    else if (this.activePage === "advanced")
-      renderAdvancedTab(ctx, containerEl);
-    else renderProvidersTab(ctx, containerEl, this.providersState);
+  getSettingDefinitions(): SettingDefinitionItem[] {
+    return [
+      {
+        type: "page",
+        name: "Model",
+        desc: "Active model, reasoning level, and providers.",
+        items: [
+          ...modelSettingDefinitions(this.plugin),
+          {
+            type: "page",
+            name: "Providers",
+            desc: "Built-in and custom OpenAI-compatible providers.",
+            items: providerSettingDefinitions(this.app, this.plugin),
+          },
+        ],
+      },
+      {
+        type: "page",
+        name: "Context",
+        desc: "System prompt, instructions file, and empty-state prompts.",
+        page: () => new FlintSettingPage(this, "Context", renderContextTab),
+      },
+      {
+        type: "page",
+        name: "Tools",
+        desc: "Toggle which vault tools the agent can use.",
+        page: () => new FlintSettingPage(this, "Tools", renderToolsTab),
+      },
+      {
+        type: "page",
+        name: "Exports",
+        desc: "Markdown export output and formatting.",
+        page: () => new FlintSettingPage(this, "Exports", renderExportsTab),
+      },
+      {
+        type: "page",
+        name: "Advanced",
+        desc: "Sessions, compaction, and other advanced options.",
+        page: () => new FlintSettingPage(this, "Advanced", renderAdvancedTab),
+      },
+    ];
   }
 
-  private context(): SettingsTabContext {
+  pageContext(refresh: () => void): SettingsTabContext {
     return {
       app: this.app,
       plugin: this.plugin,
-      display: () => this.display(),
+      display: refresh,
       notice: (error) => noticeError(error),
-      renderPageHeader: (containerEl, description) =>
-        this.renderPageHeader(containerEl, description),
+      renderPageHeader: (containerEl, description) => {
+        containerEl.createEl("p", {
+          cls: "setting-item-description flint-settings-intro",
+          text: description,
+        });
+      },
     };
-  }
-
-  private renderNavigation(containerEl: HTMLElement): void {
-    const nav = containerEl.createDiv("flint-settings-nav");
-    this.addNavButton(nav, "chat", "Chat");
-    this.addNavButton(nav, "skills", "Prompts");
-    this.addNavButton(nav, "tools", "Tools");
-    this.addNavButton(nav, "exports", "Exports");
-    this.addNavButton(nav, "advanced", "Advanced");
-    this.addNavButton(nav, "providers", "Providers");
-  }
-
-  private addNavButton(
-    parent: HTMLElement,
-    page: SettingsPageId,
-    label: string,
-  ): void {
-    const button = parent.createEl("button", {
-      text: label,
-      cls: this.activePage === page ? "is-active" : "",
-    });
-    button.addEventListener("click", () => {
-      this.activePage = page;
-      this.display();
-    });
-  }
-
-  private renderPageHeader(
-    containerEl: HTMLElement,
-    description: string,
-  ): void {
-    containerEl.createEl("p", {
-      cls: "setting-item-description flint-settings-intro",
-      text: description,
-    });
   }
 }

@@ -19,7 +19,9 @@ export class ChatViewLayout {
     private readonly workspace: Workspace,
   ) {
     this.containerEl.classList.add(
-      this.isMobile() ? "pi-chat-layout-mobile" : "pi-chat-layout-desktop",
+      this.isMobile()
+        ? "flint-chat-layout-mobile"
+        : "flint-chat-layout-desktop",
     );
     this.syncLayoutMode();
     this.syncMobileActiveChrome();
@@ -43,10 +45,10 @@ export class ChatViewLayout {
 
   destroy(): void {
     this.containerEl.classList.remove(
-      "pi-chat-layout-mobile",
-      "pi-chat-layout-desktop",
-      "pi-chat-layout-main",
-      "pi-chat-layout-drawer",
+      "flint-chat-layout-mobile",
+      "flint-chat-layout-desktop",
+      "flint-chat-layout-main",
+      "flint-chat-layout-drawer",
     );
     if (this.debounceTimer != null) {
       window.clearTimeout(this.debounceTimer);
@@ -64,14 +66,14 @@ export class ChatViewLayout {
       this.workspace.offref(this.activeLeafRef);
       this.activeLeafRef = undefined;
     }
-    this.containerEl.doc.body.classList.remove("pi-chat-mobile-active");
+    this.containerEl.doc.body.classList.remove("flint-chat-mobile-active");
     this.keyboardObserver?.disconnect();
     this.keyboardObserver = undefined;
-    this.keyboardDrawerEl?.classList.remove("pi-chat-keyboard-open");
+    this.keyboardDrawerEl?.classList.remove("flint-chat-keyboard-open");
     this.keyboardDrawerEl = undefined;
     this.keyboardLeafEl?.classList.remove(
-      "pi-chat-keyboard-open",
-      "pi-chat-keyboard-open-main",
+      "flint-chat-keyboard-open",
+      "flint-chat-keyboard-open-main",
     );
     this.keyboardLeafEl = undefined;
   }
@@ -85,7 +87,7 @@ export class ChatViewLayout {
       this.syncLayoutMode();
       this.setClearance(viewContent, 0);
       viewContent.style.setProperty(
-        "--pi-chat-mobile-nav-clearance",
+        "--flint-chat-mobile-nav-clearance",
         `${this.measureMobileNavClearance()}px`,
       );
       return;
@@ -119,12 +121,12 @@ export class ChatViewLayout {
       const leaf = this.containerEl;
       const drawer = this.containerEl.closest<HTMLElement>(".workspace-drawer");
       if (this.keyboardDrawerEl && this.keyboardDrawerEl !== drawer) {
-        this.keyboardDrawerEl.classList.remove("pi-chat-keyboard-open");
+        this.keyboardDrawerEl.classList.remove("flint-chat-keyboard-open");
       }
       if (this.keyboardLeafEl && this.keyboardLeafEl !== leaf) {
         this.keyboardLeafEl.classList.remove(
-          "pi-chat-keyboard-open",
-          "pi-chat-keyboard-open-main",
+          "flint-chat-keyboard-open",
+          "flint-chat-keyboard-open-main",
         );
       }
       this.keyboardDrawerEl = drawer ?? undefined;
@@ -140,12 +142,12 @@ export class ChatViewLayout {
       );
       const keyboardOpen = keyboardHeight > 0;
       drawer?.classList.toggle(
-        "pi-chat-keyboard-open",
+        "flint-chat-keyboard-open",
         isDrawerActive && keyboardOpen,
       );
-      leaf.classList.toggle("pi-chat-keyboard-open", keyboardOpen);
+      leaf.classList.toggle("flint-chat-keyboard-open", keyboardOpen);
       leaf.classList.toggle(
-        "pi-chat-keyboard-open-main",
+        "flint-chat-keyboard-open-main",
         !drawer && keyboardOpen,
       );
       this.syncLayoutMode();
@@ -162,8 +164,8 @@ export class ChatViewLayout {
 
   private syncLayoutMode(): void {
     const inDrawer = !!this.containerEl.closest(".workspace-drawer");
-    this.containerEl.classList.toggle("pi-chat-layout-drawer", inDrawer);
-    this.containerEl.classList.toggle("pi-chat-layout-main", !inDrawer);
+    this.containerEl.classList.toggle("flint-chat-layout-drawer", inDrawer);
+    this.containerEl.classList.toggle("flint-chat-layout-main", !inDrawer);
   }
 
   private syncMobileActiveChrome(): void {
@@ -171,7 +173,7 @@ export class ChatViewLayout {
     const isActive =
       this.workspace.activeLeaf?.view.containerEl === this.containerEl;
     this.containerEl.doc.body.classList.toggle(
-      "pi-chat-mobile-active",
+      "flint-chat-mobile-active",
       isActive,
     );
   }
@@ -202,6 +204,9 @@ export class ChatViewLayout {
   }
 
   private setClearance(viewContent: HTMLElement, px: number): void {
-    viewContent.style.setProperty("--pi-chat-status-bar-clearance", `${px}px`);
+    viewContent.style.setProperty(
+      "--flint-chat-status-bar-clearance",
+      `${px}px`,
+    );
   }
 }

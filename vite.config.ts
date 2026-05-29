@@ -1,6 +1,7 @@
 import { obsidian } from "@aliou/vite-plugin-obsidian";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
+import { devNamespace } from "./build/dev-namespace";
 import manifest from "./manifest.config";
 
 export default defineConfig(({ mode }) => ({
@@ -15,6 +16,7 @@ export default defineConfig(({ mode }) => ({
       manifest,
       outDir: mode === "development" ? "dist-dev" : "dist",
     }),
+    devNamespace(mode === "development"),
   ],
   resolve: {
     alias: [

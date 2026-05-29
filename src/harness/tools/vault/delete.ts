@@ -83,15 +83,15 @@ export function createDeleteTool(
     renderBody(el, _args, result, ctx) {
       if (!result) {
         el.createDiv({
-          cls: "pi-chat-tool-section-title",
+          cls: "flint-chat-tool-section-title",
           text: "Moving to trash…",
         });
         return;
       }
 
-      const section = el.createDiv("pi-chat-tool-section");
+      const section = el.createDiv("flint-chat-tool-section");
       section.createDiv({
-        cls: "pi-chat-tool-section-title",
+        cls: "flint-chat-tool-section-title",
         text: ctx.status === "error" ? "Error" : "Trashed",
       });
 
@@ -103,13 +103,13 @@ export function createDeleteTool(
       }
 
       const details = result.details as DeleteDetails | undefined;
-      const row = section.createDiv("pi-chat-tool-list-entry");
+      const row = section.createDiv("flint-chat-tool-list-entry");
       row.createSpan({
-        cls: "pi-chat-tool-list-badge is-trashed",
+        cls: "flint-chat-tool-list-badge is-trashed",
         text: "trashed",
       });
       row.createSpan({
-        cls: "pi-chat-tool-list-path",
+        cls: "flint-chat-tool-list-path",
         text: details?.path ?? _args.path,
       });
     },

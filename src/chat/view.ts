@@ -104,7 +104,7 @@ abstract class BaseFlintView extends ItemView {
   protected async onOpen(): Promise<void> {
     this.containerEl.addClass(this.viewClass);
     this.contentEl.empty();
-    this.contentEl.addClass("pi-chat-root");
+    this.contentEl.addClass("flint-chat-root");
 
     this.renderHeader();
     this.renderMobileStatus();
@@ -135,16 +135,16 @@ abstract class BaseFlintView extends ItemView {
   }
 
   private renderHeader(): void {
-    const header = this.contentEl.createDiv("pi-chat-header");
-    const title = header.createDiv("pi-chat-header-title");
+    const header = this.contentEl.createDiv("flint-chat-header");
+    const title = header.createDiv("flint-chat-header-title");
     title.createSpan({
-      cls: "pi-chat-header-label",
+      cls: "flint-chat-header-label",
       text: "Flint",
     });
 
-    const actions = header.createDiv("pi-chat-header-actions");
+    const actions = header.createDiv("flint-chat-header-actions");
     const historyBtn = actions.createEl("button", {
-      cls: "pi-chat-icon-btn",
+      cls: "flint-chat-icon-btn",
       attr: {
         type: "button",
         "aria-label": "Session history",
@@ -155,7 +155,7 @@ abstract class BaseFlintView extends ItemView {
     historyBtn.addEventListener("click", () => this.showHistory());
 
     const exportBtn = actions.createEl("button", {
-      cls: "pi-chat-icon-btn",
+      cls: "flint-chat-icon-btn",
       attr: {
         type: "button",
         "aria-label": "Export conversation",
@@ -166,7 +166,7 @@ abstract class BaseFlintView extends ItemView {
     exportBtn.addEventListener("click", () => this.exportConversation());
 
     const newBtn = actions.createEl("button", {
-      cls: "pi-chat-icon-btn",
+      cls: "flint-chat-icon-btn",
       attr: {
         type: "button",
         "aria-label": "Start new conversation",
@@ -192,18 +192,18 @@ abstract class BaseFlintView extends ItemView {
   }
 
   private renderMobileStatus(): void {
-    const status = this.contentEl.createDiv("pi-chat-mobile-status");
-    this.mobileStatsEl = status.createDiv("pi-chat-mobile-session-state");
-    this.mobileModelStateEl = status.createDiv("pi-chat-mobile-model-state");
+    const status = this.contentEl.createDiv("flint-chat-mobile-status");
+    this.mobileStatsEl = status.createDiv("flint-chat-mobile-session-state");
+    this.mobileModelStateEl = status.createDiv("flint-chat-mobile-model-state");
   }
 
   private renderMessagesContainer(): void {
-    const wrapper = this.contentEl.createDiv("pi-chat-messages-wrapper");
-    this.messagesEl = wrapper.createDiv("pi-chat-messages");
-    this.historyEl = wrapper.createDiv("pi-chat-history");
+    const wrapper = this.contentEl.createDiv("flint-chat-messages-wrapper");
+    this.messagesEl = wrapper.createDiv("flint-chat-messages");
+    this.historyEl = wrapper.createDiv("flint-chat-history");
     this.historyEl.style.display = "none";
     this.scrollButton = wrapper.createEl("button", {
-      cls: "pi-chat-scroll-bottom",
+      cls: "flint-chat-scroll-bottom",
       attr: {
         type: "button",
         "aria-label": "Scroll to bottom",
@@ -226,29 +226,31 @@ abstract class BaseFlintView extends ItemView {
   }
 
   private renderComposer(): void {
-    const composer = this.contentEl.createDiv("pi-chat-composer");
+    const composer = this.contentEl.createDiv("flint-chat-composer");
     this.composerEl = composer;
 
-    this.loadingEl = composer.createDiv("pi-chat-loading");
+    this.loadingEl = composer.createDiv("flint-chat-loading");
     this.loadingEl.style.display = "none";
-    this.loadingEl.createSpan({ cls: "pi-chat-loading-frame", text: "~" });
+    this.loadingEl.createSpan({ cls: "flint-chat-loading-frame", text: "~" });
     this.loadingEl.createSpan({
-      cls: "pi-chat-loading-label",
+      cls: "flint-chat-loading-label",
       text: "inferring",
     });
 
     this.wikiLinkSuggestionsEl = composer.createDiv(
-      "pi-chat-wikilink-suggestions",
+      "flint-chat-wikilink-suggestions",
     );
     this.wikiLinkSuggestionsEl.style.display = "none";
 
-    this.slashSuggestionsEl = composer.createDiv("pi-chat-slash-suggestions");
+    this.slashSuggestionsEl = composer.createDiv(
+      "flint-chat-slash-suggestions",
+    );
     this.slashSuggestionsEl.style.display = "none";
 
-    const form = composer.createEl("form", { cls: "pi-chat-input-shell" });
+    const form = composer.createEl("form", { cls: "flint-chat-input-shell" });
 
     this.inputEl = form.createEl("textarea", {
-      cls: "pi-chat-input",
+      cls: "flint-chat-input",
       attr: { rows: "3", placeholder: "Message..." },
     });
     this.inputEl.addEventListener("keydown", (event) => {
@@ -274,9 +276,9 @@ abstract class BaseFlintView extends ItemView {
       this.renderComposerSuggestions();
     });
 
-    const bar = form.createDiv("pi-chat-input-bar");
+    const bar = form.createDiv("flint-chat-input-bar");
     this.mobileModelChipEl = bar.createEl("button", {
-      cls: "pi-chat-model-chip",
+      cls: "flint-chat-model-chip",
       attr: {
         type: "button",
         "aria-label": "Select model",
@@ -288,7 +290,7 @@ abstract class BaseFlintView extends ItemView {
     });
 
     this.clearButton = bar.createEl("button", {
-      cls: "pi-chat-icon-btn pi-chat-clear",
+      cls: "flint-chat-icon-btn flint-chat-clear",
       attr: {
         type: "button",
         "aria-label": "Clear input",
@@ -304,7 +306,7 @@ abstract class BaseFlintView extends ItemView {
     });
 
     this.cancelButton = bar.createEl("button", {
-      cls: "pi-chat-icon-btn pi-chat-cancel",
+      cls: "flint-chat-icon-btn flint-chat-cancel",
       attr: {
         type: "button",
         "aria-label": "Stop generating",
@@ -318,7 +320,7 @@ abstract class BaseFlintView extends ItemView {
     );
 
     this.sendButton = bar.createEl("button", {
-      cls: "pi-chat-icon-btn pi-chat-send",
+      cls: "flint-chat-icon-btn flint-chat-send",
       attr: {
         type: "submit",
         "aria-label": `Send message (${this.submitShortcutLabel})`,
@@ -350,9 +352,9 @@ abstract class BaseFlintView extends ItemView {
       void action.catch((error) => noticeError(error));
     });
 
-    const metaRow = composer.createDiv("pi-chat-meta-row");
-    this.statsEl = metaRow.createDiv("pi-chat-session-state");
-    this.modelMetaEl = metaRow.createDiv("pi-chat-model-state");
+    const metaRow = composer.createDiv("flint-chat-meta-row");
+    this.statsEl = metaRow.createDiv("flint-chat-session-state");
+    this.modelMetaEl = metaRow.createDiv("flint-chat-model-state");
 
     setTimeout(() => this.inputEl?.focus(), 0);
     this.updateComposerButtons();
@@ -421,26 +423,26 @@ abstract class BaseFlintView extends ItemView {
 
     for (const [index, suggestion] of this.wikiLinkSuggestions.entries()) {
       const item = this.wikiLinkSuggestionsEl.createEl("button", {
-        cls: "pi-chat-wikilink-suggestion",
+        cls: "flint-chat-wikilink-suggestion",
         attr: { type: "button" },
       });
       item.toggleClass(
         "is-selected",
         index === this.selectedWikiLinkSuggestion,
       );
-      const label = item.createSpan("pi-chat-wikilink-label");
+      const label = item.createSpan("flint-chat-wikilink-label");
       label.setAttr("title", suggestion.label);
       const labelParts = splitMiddleText(suggestion.label);
       label.createSpan({
-        cls: "pi-chat-wikilink-label-start",
+        cls: "flint-chat-wikilink-label-start",
         text: labelParts.start,
       });
       label.createSpan({
-        cls: "pi-chat-wikilink-label-end",
+        cls: "flint-chat-wikilink-label-end",
         text: labelParts.end,
       });
       item.createSpan({
-        cls: "pi-chat-wikilink-description",
+        cls: "flint-chat-wikilink-description",
         text: suggestion.directory,
       });
       item.addEventListener("click", () => this.applyWikiLinkSuggestion(index));
@@ -557,13 +559,16 @@ abstract class BaseFlintView extends ItemView {
 
     for (const [index, suggestion] of this.slashSuggestions.entries()) {
       const item = this.slashSuggestionsEl.createEl("button", {
-        cls: "pi-chat-slash-suggestion",
+        cls: "flint-chat-slash-suggestion",
         attr: { type: "button" },
       });
       item.toggleClass("is-selected", index === this.selectedSlashSuggestion);
-      item.createSpan({ cls: "pi-chat-slash-label", text: suggestion.label });
       item.createSpan({
-        cls: "pi-chat-slash-description",
+        cls: "flint-chat-slash-label",
+        text: suggestion.label,
+      });
+      item.createSpan({
+        cls: "flint-chat-slash-description",
         text: suggestion.description,
       });
       item.addEventListener("click", () => this.applySlashSuggestion(index));
@@ -650,6 +655,7 @@ abstract class BaseFlintView extends ItemView {
       this.plugin.store.settings.customProviders,
       this.plugin.store.settings.provider,
       this.plugin.store.settings.modelId,
+      this.plugin.store.settings.providerAuth,
     );
     const modelName =
       selectedModel?.name || this.plugin.store.settings.modelId || "no model";
@@ -680,9 +686,9 @@ abstract class BaseFlintView extends ItemView {
     if (!showingHistory) return;
 
     this.historyEl.empty();
-    const header = this.historyEl.createDiv("pi-chat-history-header");
+    const header = this.historyEl.createDiv("flint-chat-history-header");
     const back = header.createEl("button", {
-      cls: "pi-chat-icon-btn",
+      cls: "flint-chat-icon-btn",
       attr: {
         type: "button",
         "aria-label": "Back to chat",
@@ -695,11 +701,11 @@ abstract class BaseFlintView extends ItemView {
       this.render();
       this.inputEl?.focus();
     });
-    header.createDiv({ cls: "pi-chat-history-title", text: "Sessions" });
+    header.createDiv({ cls: "flint-chat-history-title", text: "Sessions" });
 
-    const body = this.historyEl.createDiv("pi-chat-history-body");
+    const body = this.historyEl.createDiv("flint-chat-history-body");
     body.createDiv({
-      cls: "pi-chat-history-status",
+      cls: "flint-chat-history-status",
       text: "Loading sessions...",
     });
     void this.populateHistory(body);
@@ -714,23 +720,23 @@ abstract class BaseFlintView extends ItemView {
       body.empty();
       if (sessions.length === 0) {
         body.createDiv({
-          cls: "pi-chat-history-empty",
+          cls: "flint-chat-history-empty",
           text: "No saved sessions yet.",
         });
         return;
       }
       const list = body.createDiv({
-        cls: "pi-chat-history-list",
+        cls: "flint-chat-history-list",
         attr: { role: "listbox", "aria-label": "Session history" },
       });
       for (const session of sessions) {
-        const row = list.createDiv("pi-chat-history-row");
+        const row = list.createDiv("flint-chat-history-row");
         row.toggleClass(
           "is-current",
           session.path === this.plugin.agent.currentSessionPath,
         );
         const load = row.createEl("button", {
-          cls: "pi-chat-history-item",
+          cls: "flint-chat-history-item",
           attr: {
             type: "button",
             role: "option",
@@ -739,9 +745,9 @@ abstract class BaseFlintView extends ItemView {
             ),
           },
         });
-        load.createDiv({ cls: "pi-chat-session-title", text: session.name });
+        load.createDiv({ cls: "flint-chat-session-title", text: session.name });
         load.createDiv({
-          cls: "pi-chat-session-meta",
+          cls: "flint-chat-session-meta",
           text: `${session.messageCount} msgs · ${formatDateTime(session.createdAt)}`,
         });
         load.addEventListener("click", () => {
@@ -753,7 +759,7 @@ abstract class BaseFlintView extends ItemView {
         });
 
         const del = row.createEl("button", {
-          cls: "pi-chat-icon-btn pi-chat-delete-session",
+          cls: "flint-chat-icon-btn flint-chat-delete-session",
           attr: {
             type: "button",
             "aria-label": `Delete ${session.name}`,
@@ -773,7 +779,7 @@ abstract class BaseFlintView extends ItemView {
       console.error(error);
       body.empty();
       body.createDiv({
-        cls: "pi-chat-history-status is-error",
+        cls: "flint-chat-history-status is-error",
         text: error instanceof Error ? error.message : String(error),
       });
     }
@@ -819,13 +825,13 @@ abstract class BaseFlintView extends ItemView {
     const role = message.role;
 
     if (role === "user") {
-      const card = this.messagesEl.createDiv("pi-chat-user-message");
+      const card = this.messagesEl.createDiv("flint-chat-user-message");
       this.renderUserContent(card, message.content);
       return;
     }
 
     if (role === "assistant" && Array.isArray(message.content)) {
-      const group = this.messagesEl.createDiv("pi-chat-assistant");
+      const group = this.messagesEl.createDiv("flint-chat-assistant");
       const isStreaming = isLast && this.plugin.agent.isRunning;
       const lastTextIndex = (() => {
         for (let index = message.content.length - 1; index >= 0; index -= 1) {
@@ -845,13 +851,16 @@ abstract class BaseFlintView extends ItemView {
         }
       });
       if (message.errorMessage)
-        group.createDiv({ cls: "pi-chat-error", text: message.errorMessage });
+        group.createDiv({
+          cls: "flint-chat-error",
+          text: message.errorMessage,
+        });
       return;
     }
 
     if (role === "toolResult") return;
 
-    const fallback = this.messagesEl.createDiv("pi-chat-assistant");
+    const fallback = this.messagesEl.createDiv("flint-chat-assistant");
     this.renderMarkdownBlock(
       fallback,
       "content" in message ? contentText(message.content) : safeJson(message),
@@ -860,7 +869,7 @@ abstract class BaseFlintView extends ItemView {
 
   private renderUserContent(parent: HTMLElement, content: unknown): void {
     if (!Array.isArray(content)) {
-      const textEl = parent.createDiv("pi-chat-user-text");
+      const textEl = parent.createDiv("flint-chat-user-text");
       this.renderUserText(textEl, contentText(content));
       return;
     }
@@ -873,7 +882,7 @@ abstract class BaseFlintView extends ItemView {
       .map((part) => part.text)
       .join("\n");
     if (text) {
-      const textEl = parent.createDiv("pi-chat-user-text");
+      const textEl = parent.createDiv("flint-chat-user-text");
       this.renderUserText(textEl, text);
     }
   }
@@ -928,32 +937,32 @@ abstract class BaseFlintView extends ItemView {
     const model = this.plugin.store.settings.modelId;
     const blocked =
       !provider || !model || !this.plugin.secrets.hasCredential(provider);
-    const empty = this.messagesEl.createDiv("pi-chat-empty");
-    const icon = empty.createDiv("pi-chat-empty-icon");
+    const empty = this.messagesEl.createDiv("flint-chat-empty");
+    const icon = empty.createDiv("flint-chat-empty-icon");
     setIcon(icon, blocked ? "alert-triangle" : "flint-logo");
     empty.createDiv({
-      cls: "pi-chat-empty-title",
+      cls: "flint-chat-empty-title",
       text: blocked ? "Provider setup needed" : "What can I help with?",
     });
     empty.createDiv({
-      cls: "pi-chat-empty-body",
+      cls: "flint-chat-empty-body",
       text: blocked
         ? `Configure credentials for ${provider || "a provider"} before starting a conversation.`
         : "Ask Flint to inspect, explain, or update notes and Bases in this vault.",
     });
     if (blocked) {
       const setup = empty.createEl("button", {
-        cls: "pi-chat-primary-action",
+        cls: "flint-chat-primary-action",
         text: "Open settings",
         attr: { type: "button" },
       });
       setup.addEventListener("click", () => this.openSettings());
       return;
     }
-    const suggestions = empty.createDiv("pi-chat-suggestions");
+    const suggestions = empty.createDiv("flint-chat-suggestions");
     for (const prompt of this.plugin.store.settings.emptyStateSuggestions) {
       const chip = suggestions.createEl("button", {
-        cls: "pi-chat-suggestion",
+        cls: "flint-chat-suggestion",
         text: prompt,
         attr: { type: "button" },
       });
@@ -973,7 +982,7 @@ abstract class BaseFlintView extends ItemView {
   }
 
   private renderMarkdownBlock(parent: HTMLElement, text: string): void {
-    const block = parent.createDiv("pi-chat-markdown");
+    const block = parent.createDiv("flint-chat-markdown");
     void MarkdownRenderer.render(this.app, text, block, "", this).then(() => {
       this.linkVaultPaths(block);
       this.wrapMarkdownTables(block);
@@ -1014,7 +1023,7 @@ abstract class BaseFlintView extends ItemView {
 
         fragment.appendText(text.slice(lastIndex, pathStart));
         const link = fragment.createEl("a", {
-          cls: "pi-chat-vault-path-link",
+          cls: "flint-chat-vault-path-link",
           text: resolved.displayPath,
           attr: { href: "#" },
         });
@@ -1048,18 +1057,20 @@ abstract class BaseFlintView extends ItemView {
 
   private wrapMarkdownTables(block: HTMLElement): void {
     for (const table of Array.from(block.querySelectorAll("table"))) {
-      if (table.closest(".pi-chat-markdown-table-scroll")) continue;
+      if (table.closest(".flint-chat-markdown-table-scroll")) continue;
       const parent = table.parentElement;
       if (!parent) continue;
       const wrapper = document.createElement("div");
-      wrapper.className = "pi-chat-markdown-table-scroll";
+      wrapper.className = "flint-chat-markdown-table-scroll";
       parent.insertBefore(wrapper, table);
       wrapper.appendChild(table);
     }
   }
 
   private renderStreamingText(parent: HTMLElement, text: string): void {
-    const block = parent.createDiv("pi-chat-markdown pi-chat-streaming-text");
+    const block = parent.createDiv(
+      "flint-chat-markdown flint-chat-streaming-text",
+    );
     block.setText(text);
   }
 
@@ -1068,15 +1079,15 @@ abstract class BaseFlintView extends ItemView {
     text: string,
     isComplete: boolean,
   ): void {
-    const details = parent.createEl("details", { cls: "pi-chat-thinking" });
+    const details = parent.createEl("details", { cls: "flint-chat-thinking" });
     const summary = details.createEl("summary");
     summary.createSpan({
       cls: isComplete
-        ? "pi-chat-thinking-label is-complete"
-        : "pi-chat-thinking-label is-active",
+        ? "flint-chat-thinking-label is-complete"
+        : "flint-chat-thinking-label is-active",
       text: isComplete ? "Thinking ✓" : "Thinking…",
     });
-    const body = details.createDiv("pi-chat-thinking-body");
+    const body = details.createDiv("flint-chat-thinking-body");
     void MarkdownRenderer.render(this.app, text, body, "", this).then(() => {
       this.linkVaultPaths(body);
     });
@@ -1091,36 +1102,36 @@ abstract class BaseFlintView extends ItemView {
     const run = this.plugin.agent.toolRuns.get(id);
     const expanded = this.toolExpansion.get(id) ?? false;
     const status: ToolRun["status"] = run?.status ?? "running";
-    const wrapper = parent.createDiv(`pi-chat-tool is-${status}`);
+    const wrapper = parent.createDiv(`flint-chat-tool is-${status}`);
     const adapter = this.plugin.agent.getToolAdapter(name);
 
     const ctx: ToolRenderContext = {
       app: this.app,
       component: this,
       status,
-      isMobile: this.viewClass === "pi-chat-view-mobile",
+      isMobile: this.viewClass === "flint-chat-view-mobile",
     };
 
     // --- Header (toggle button) ---
     const button = wrapper.createEl("button", {
-      cls: "pi-chat-tool-toggle",
+      cls: "flint-chat-tool-toggle",
       attr: { type: "button", "aria-expanded": String(expanded) },
     });
     button.createSpan({
-      cls: "pi-chat-tool-status",
+      cls: "flint-chat-tool-status",
       text: status === "running" ? "..." : status,
     });
 
-    const headerContent = button.createSpan("pi-chat-tool-header-content");
+    const headerContent = button.createSpan("flint-chat-tool-header-content");
     if (adapter) {
       const titleMd = adapter.renderTitle(args, status);
       void MarkdownRenderer.render(this.app, titleMd, headerContent, "", this);
     } else {
-      headerContent.createSpan({ cls: "pi-chat-tool-name", text: name });
+      headerContent.createSpan({ cls: "flint-chat-tool-name", text: name });
     }
 
     button.createSpan({
-      cls: "pi-chat-tool-caret",
+      cls: "flint-chat-tool-caret",
       text: expanded ? "▴" : "▾",
     });
     button.addEventListener("click", () => {
@@ -1131,7 +1142,7 @@ abstract class BaseFlintView extends ItemView {
     if (!expanded) return;
 
     // --- Body (expanded details) ---
-    const detailsEl = wrapper.createDiv("pi-chat-tool-details");
+    const detailsEl = wrapper.createDiv("flint-chat-tool-details");
     if (adapter) {
       adapter.renderBody(detailsEl, args, run?.result, ctx);
     } else {
@@ -1166,8 +1177,8 @@ abstract class BaseFlintView extends ItemView {
     text: string,
     isError = false,
   ): void {
-    const section = parent.createDiv("pi-chat-tool-section");
-    section.createDiv({ cls: "pi-chat-tool-section-title", text: label });
+    const section = parent.createDiv("flint-chat-tool-section");
+    section.createDiv({ cls: "flint-chat-tool-section-title", text: label });
     section.createEl("pre", { cls: isError ? "is-error" : undefined, text });
   }
 
@@ -1187,7 +1198,9 @@ abstract class BaseFlintView extends ItemView {
     this.loadingTimer = window.setInterval(() => {
       this.loadingFrame =
         (this.loadingFrame + 1) % BaseFlintView.LOADING_FRAMES.length;
-      const frameEl = this.loadingEl?.querySelector(".pi-chat-loading-frame");
+      const frameEl = this.loadingEl?.querySelector(
+        ".flint-chat-loading-frame",
+      );
       if (frameEl)
         frameEl.textContent =
           BaseFlintView.LOADING_FRAMES[this.loadingFrame] ?? "~";
@@ -1243,13 +1256,13 @@ abstract class BaseFlintView extends ItemView {
 }
 
 export class DesktopFlintView extends BaseFlintView {
-  protected readonly viewClass = "pi-chat-view-desktop";
+  protected readonly viewClass = "flint-chat-view-desktop";
   protected readonly submitOnEnter = true;
   protected readonly submitShortcutLabel = "Enter";
 }
 
 export class MobileFlintView extends BaseFlintView {
-  protected readonly viewClass = "pi-chat-view-mobile";
+  protected readonly viewClass = "flint-chat-view-mobile";
   protected readonly submitOnEnter = false;
   protected readonly submitShortcutLabel = "Cmd+Enter";
 

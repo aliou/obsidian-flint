@@ -155,7 +155,7 @@ export function createFindTool(
     renderBody(el, _args, result, ctx) {
       if (!result) {
         el.createDiv({
-          cls: "pi-chat-tool-section-title",
+          cls: "flint-chat-tool-section-title",
           text: "Searching…",
         });
         return;
@@ -163,9 +163,9 @@ export function createFindTool(
       if (ctx.status === "error") {
         const msg =
           result.content[0]?.type === "text" ? result.content[0].text : "";
-        const section = el.createDiv("pi-chat-tool-section");
+        const section = el.createDiv("flint-chat-tool-section");
         section.createDiv({
-          cls: "pi-chat-tool-section-title",
+          cls: "flint-chat-tool-section-title",
           text: "Error",
         });
         section.createEl("pre", { cls: "is-error", text: msg });
@@ -176,31 +176,31 @@ export function createFindTool(
       const matches = details?.matches;
       if (!matches?.length) {
         el.createDiv({
-          cls: "pi-chat-tool-section",
+          cls: "flint-chat-tool-section",
           text: "No files found",
         });
         return;
       }
 
-      const section = el.createDiv("pi-chat-tool-section");
+      const section = el.createDiv("flint-chat-tool-section");
       const countText =
         details?.resultLimitReached !== undefined
           ? `${details.resultLimitReached} of ${details.total} results`
           : `${matches.length} result${matches.length === 1 ? "" : "s"}`;
       section.createDiv({
-        cls: "pi-chat-tool-section-title",
+        cls: "flint-chat-tool-section-title",
         text: countText,
       });
 
-      const list = section.createDiv("pi-chat-tool-list");
+      const list = section.createDiv("flint-chat-tool-list");
       for (const match of matches) {
-        const row = list.createDiv("pi-chat-tool-list-entry");
+        const row = list.createDiv("flint-chat-tool-list-entry");
         row.createSpan({
-          cls: `pi-chat-tool-list-badge is-${match.kind}`,
+          cls: `flint-chat-tool-list-badge is-${match.kind}`,
           text: match.kind,
         });
         row.createSpan({
-          cls: "pi-chat-tool-list-path",
+          cls: "flint-chat-tool-list-path",
           text: match.path,
         });
       }

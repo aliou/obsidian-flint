@@ -76,6 +76,7 @@ export class FlintSettingsStore {
         const models = modelsForProvider(
           this.settings.customProviders,
           providerId,
+          this.settings.providerAuth,
         );
         if (models.length > 0 && models[0].baseUrl)
           authlessBaseUrls.push(models[0].baseUrl);

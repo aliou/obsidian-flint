@@ -1,4 +1,4 @@
-import { type App, Modal, Notice, Setting } from "obsidian";
+import { type App, Modal, Notice, SecretComponent, Setting } from "obsidian";
 import type FlintPlugin from "@/main";
 import {
   type CustomProviderConfig,
@@ -118,28 +118,14 @@ export class CustomProviderModal extends Modal {
       return;
     }
 
-    new Setting(this.contentEl)
+    const setting = new Setting(this.contentEl)
       .setName("Secret")
-      .setDesc(
-        "Select a secret from Obsidian SecretStorage to use as the API key.",
-      )
-      .addDropdown((dropdown) => {
-        dropdown.addOption("", "No secret linked");
-        for (const id of this.plugin.secrets.listSecretIds())
-          dropdown.addOption(id, id);
-        dropdown.setValue(this.secretId);
-        dropdown.onChange((value) => {
-          this.secretId = value;
-        });
-      })
-      .addButton((button) =>
-        button.setButtonText("+ Add secret").onClick(() => {
-          this.plugin.secrets.openAddSecretModal((newSecretId) => {
-            this.secretId = newSecretId;
-            this.render();
-          });
-        }),
-      );
+      .setDesc("Pick or create an API key stored in your OS keychain.");
+    new SecretComponent(this.app, setting.controlEl)
+      .setValue(this.secretId)
+      .onChange((secretName) => {
+        this.secretId = secretName?.trim() || "";
+      });
   }
 
   private renderModelsSection(): void {

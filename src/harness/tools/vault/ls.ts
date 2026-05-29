@@ -106,7 +106,7 @@ export function createLsTool(
     renderBody(el, _args, result, ctx) {
       if (!result) {
         el.createDiv({
-          cls: "pi-chat-tool-section-title",
+          cls: "flint-chat-tool-section-title",
           text: "Listing…",
         });
         return;
@@ -114,9 +114,9 @@ export function createLsTool(
       if (ctx.status === "error") {
         const msg =
           result.content[0]?.type === "text" ? result.content[0].text : "";
-        const section = el.createDiv("pi-chat-tool-section");
+        const section = el.createDiv("flint-chat-tool-section");
         section.createDiv({
-          cls: "pi-chat-tool-section-title",
+          cls: "flint-chat-tool-section-title",
           text: "Error",
         });
         section.createEl("pre", { cls: "is-error", text: msg });
@@ -126,11 +126,11 @@ export function createLsTool(
       const details = result.details as LsDetails | undefined;
       const entries = details?.entries;
       if (!entries?.length) {
-        el.createDiv({ cls: "pi-chat-tool-section", text: "(empty)" });
+        el.createDiv({ cls: "flint-chat-tool-section", text: "(empty)" });
         return;
       }
 
-      const section = el.createDiv("pi-chat-tool-section");
+      const section = el.createDiv("flint-chat-tool-section");
       const titleParts = [
         `${entries.length} item${entries.length === 1 ? "" : "s"}`,
       ];
@@ -140,19 +140,19 @@ export function createLsTool(
         );
       }
       section.createDiv({
-        cls: "pi-chat-tool-section-title",
+        cls: "flint-chat-tool-section-title",
         text: titleParts.join(" "),
       });
 
-      const list = section.createDiv("pi-chat-tool-list");
+      const list = section.createDiv("flint-chat-tool-list");
       for (const entry of entries) {
-        const row = list.createDiv("pi-chat-tool-list-entry");
+        const row = list.createDiv("flint-chat-tool-list-entry");
         row.createSpan({
-          cls: `pi-chat-tool-list-badge is-${entry.kind}`,
+          cls: `flint-chat-tool-list-badge is-${entry.kind}`,
           text: entry.kind,
         });
         row.createSpan({
-          cls: "pi-chat-tool-list-path",
+          cls: "flint-chat-tool-list-path",
           text: entry.path,
         });
       }

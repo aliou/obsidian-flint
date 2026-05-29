@@ -76,7 +76,7 @@ function renderSection(
   text: string,
   isError = false,
 ): void {
-  const section = parent.createDiv("pi-chat-tool-section");
-  section.createDiv({ cls: "pi-chat-tool-section-title", text: label });
+  const section = parent.createDiv("flint-chat-tool-section");
+  section.createDiv({ cls: "flint-chat-tool-section-title", text: label });
   section.createEl("pre", { cls: isError ? "is-error" : undefined, text });
 }

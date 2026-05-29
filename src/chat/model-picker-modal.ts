@@ -26,13 +26,13 @@ export class ModelPickerModal extends Modal {
   }
 
   override onOpen(): void {
-    this.containerEl.addClass("pi-chat-model-picker-modal");
+    this.containerEl.addClass("flint-chat-model-picker-modal");
     this.setTitle("Select model");
     this.render();
   }
 
   override onClose(): void {
-    this.containerEl.removeClass("pi-chat-model-picker-modal");
+    this.containerEl.removeClass("flint-chat-model-picker-modal");
     this.contentEl.empty();
   }
 
@@ -40,7 +40,7 @@ export class ModelPickerModal extends Modal {
     this.contentEl.empty();
 
     const search = this.contentEl.createEl("input", {
-      cls: "pi-chat-model-picker-search",
+      cls: "flint-chat-model-picker-search",
       attr: {
         type: "search",
         placeholder: "Search models...",
@@ -52,14 +52,14 @@ export class ModelPickerModal extends Modal {
       this.query = search.value;
       this.render();
       this.contentEl
-        .querySelector<HTMLInputElement>(".pi-chat-model-picker-search")
+        .querySelector<HTMLInputElement>(".flint-chat-model-picker-search")
         ?.focus();
     });
 
     const options = this.filteredOptions();
     if (options.length === 0) {
       this.contentEl.createDiv({
-        cls: "pi-chat-model-picker-empty",
+        cls: "flint-chat-model-picker-empty",
         text: "No configured models found.",
       });
       this.renderThinkingSetting();
@@ -123,21 +123,21 @@ export class ModelPickerModal extends Modal {
     collapsed = false,
   ): void {
     const section = this.contentEl.createEl("details", {
-      cls: "pi-chat-model-picker-section",
+      cls: "flint-chat-model-picker-section",
     });
     section.open = !collapsed;
     const summary = section.createEl("summary", {
-      cls: "pi-chat-model-picker-provider",
+      cls: "flint-chat-model-picker-provider",
     });
-    const chevron = summary.createSpan("pi-chat-model-picker-chevron");
+    const chevron = summary.createSpan("flint-chat-model-picker-chevron");
     setIcon(chevron, "chevron-right");
-    summary.createSpan({ cls: "pi-chat-model-picker-title", text: title });
+    summary.createSpan({ cls: "flint-chat-model-picker-title", text: title });
     summary.createSpan({
-      cls: "pi-chat-model-picker-count",
+      cls: "flint-chat-model-picker-count",
       text: String(options.length),
     });
 
-    const list = section.createDiv("pi-chat-model-picker-list");
+    const list = section.createDiv("flint-chat-model-picker-list");
     for (const { provider, model } of options)
       this.renderRow(list, provider, model);
   }
@@ -150,23 +150,23 @@ export class ModelPickerModal extends Modal {
     const selected =
       provider === this.plugin.store.settings.provider &&
       model.id === this.plugin.store.settings.modelId;
-    const row = parent.createDiv("pi-chat-model-picker-row-wrap");
+    const row = parent.createDiv("flint-chat-model-picker-row-wrap");
     row.toggleClass("is-selected", selected);
     const modelButton = row.createEl("button", {
-      cls: "pi-chat-model-picker-row",
+      cls: "flint-chat-model-picker-row",
       attr: {
         type: "button",
         "aria-pressed": String(selected),
       },
     });
     modelButton.toggleClass("is-selected", selected);
-    const text = modelButton.createDiv("pi-chat-model-picker-row-text");
+    const text = modelButton.createDiv("flint-chat-model-picker-row-text");
     text.createDiv({
-      cls: "pi-chat-model-picker-name",
+      cls: "flint-chat-model-picker-name",
       text: model.id,
     });
-    const meta = text.createDiv("pi-chat-model-picker-meta");
-    const reasoning = meta.createSpan("pi-chat-model-picker-meta-item");
+    const meta = text.createDiv("flint-chat-model-picker-meta");
+    const reasoning = meta.createSpan("flint-chat-model-picker-meta-item");
     reasoning.setAttr(
       "aria-label",
       model.reasoning ? "Reasoning supported" : "No reasoning",
@@ -176,12 +176,12 @@ export class ModelPickerModal extends Modal {
       model.reasoning ? "Reasoning supported" : "No reasoning",
     );
     setIcon(reasoning, model.reasoning ? "brain" : "minus-circle");
-    meta.createSpan({ cls: "pi-chat-model-picker-separator", text: "—" });
+    meta.createSpan({ cls: "flint-chat-model-picker-separator", text: "—" });
     meta.createSpan({
-      cls: "pi-chat-model-picker-context",
+      cls: "flint-chat-model-picker-context",
       text: this.formatContextWindow(model.contextWindow),
     });
-    const check = modelButton.createSpan("pi-chat-model-picker-check");
+    const check = modelButton.createSpan("flint-chat-model-picker-check");
     if (selected) setIcon(check, "check");
 
     modelButton.addEventListener("click", () => {
@@ -189,7 +189,7 @@ export class ModelPickerModal extends Modal {
     });
 
     const favoriteButton = row.createEl("button", {
-      cls: "pi-chat-model-picker-favorite",
+      cls: "flint-chat-model-picker-favorite",
       attr: {
         type: "button",
         "aria-label": this.plugin.modelRegistry.isFavoriteModel(
@@ -223,7 +223,7 @@ export class ModelPickerModal extends Modal {
     const supportsReasoning = currentModel?.reasoning === true;
 
     new Setting(this.contentEl)
-      .setClass("pi-chat-model-picker-thinking")
+      .setClass("flint-chat-model-picker-thinking")
       .setName("Thinking level")
       .setDesc(
         supportsReasoning

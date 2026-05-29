@@ -33,15 +33,27 @@ export class ModelRegistry {
   }
 
   getProviders(): string[] {
-    return providerNames(this.store.settings.customProviders);
+    return providerNames(
+      this.store.settings.customProviders,
+      this.store.settings.providerAuth,
+    );
   }
 
   getModelsForProvider(provider: string): Model<Api>[] {
-    return modelsForProvider(this.store.settings.customProviders, provider);
+    return modelsForProvider(
+      this.store.settings.customProviders,
+      provider,
+      this.store.settings.providerAuth,
+    );
   }
 
   getModel(provider: string, modelId: string): Model<Api> | undefined {
-    return findModel(this.store.settings.customProviders, provider, modelId);
+    return findModel(
+      this.store.settings.customProviders,
+      provider,
+      modelId,
+      this.store.settings.providerAuth,
+    );
   }
 
   getCurrentModel(): Model<Api> | undefined {
@@ -140,7 +152,10 @@ export class ModelRegistry {
   }
 
   private configuredModels(): Model<Api>[] {
-    const all = allModels(this.store.settings.customProviders);
+    const all = allModels(
+      this.store.settings.customProviders,
+      this.store.settings.providerAuth,
+    );
     if (!this.hasCredentialFn) return all;
     return all.filter((m) => this.hasCredentialFn?.(m.provider));
   }
@@ -167,6 +182,7 @@ export class ModelRegistry {
     const models = modelsForProvider(
       this.store.settings.customProviders,
       provider,
+      this.store.settings.providerAuth,
     );
     if (models.length === 0)
       throw new Error(`No models for provider: ${provider}`);
@@ -177,6 +193,7 @@ export class ModelRegistry {
       this.store.settings.customProviders,
       this.store.settings.provider,
       this.store.settings.modelId,
+      this.store.settings.providerAuth,
     );
     if (selected && !selected.reasoning)
       this.store.settings.thinkingLevel = "off";

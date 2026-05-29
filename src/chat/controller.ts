@@ -6,7 +6,7 @@ import type {
 } from "@earendil-works/pi-agent-core";
 import { loadSkills } from "@earendil-works/pi-agent-core";
 import type { Api, Model } from "@earendil-works/pi-ai";
-import type { App } from "obsidian";
+import { type App, normalizePath } from "obsidian";
 import {
   applyHarnessEvent,
   rebuildToolRunsFromMessages,
@@ -24,6 +24,7 @@ import type {
   ObsidianSessionMetadata,
   ObsidianSessionRepo,
 } from "@/harness/session";
+import { discoverSkillFolders } from "@/harness/skills/discovery";
 import type { ToolRenderAdapter } from "@/harness/tools";
 import { toRenderAdapter } from "@/harness/tools";
 import type {
@@ -307,10 +308,13 @@ export class AgentController {
   async reloadSkills(): Promise<void> {
     const settings = this.deps.getSettings();
     const { env } = this.deps;
-    const { skills, diagnostics } = await loadSkills(
-      env,
-      settings.skillFolders,
+    const disabled = new Set(
+      settings.disabledSkills.map((path) => normalizePath(path)),
     );
+    const folders = discoverSkillFolders(this.deps.app).filter(
+      (folder) => !disabled.has(normalizePath(folder)),
+    );
+    const { skills, diagnostics } = await loadSkills(env, folders);
     this.skills = skills;
     this.skillsStale = false;
     if (diagnostics.length > 0) {

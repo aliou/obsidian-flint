@@ -16,6 +16,8 @@ export const VIEW_TYPE = "flint-view";
 export type ProviderAuthConfig = {
   requiresApiKey: boolean;
   secretId?: string;
+  /** Optional override base URL for built-in providers, useful for proxies. */
+  proxyBaseUrl?: string;
 };
 
 export type CustomProviderModelConfig = {
@@ -67,8 +69,12 @@ export type FlintSettings = {
   systemPrompt: string;
   /** Path in the vault to an AGENTS.md instructions file. */
   agentFilePath: string;
-  /** Paths in the vault to folders containing SKILL.md files. */
-  skillFolders: string[];
+  /**
+   * Folder paths of auto-discovered skills the user has turned OFF. Skills are
+   * discovered from every SKILL.md in the vault and enabled by default; only
+   * the disabled set is persisted, keyed by the skill's folder path.
+   */
+  disabledSkills: string[];
   /** Names of enabled vault tools. */
   enabledTools: string[];
   /** Path inside the vault where sessions are stored. */
@@ -134,7 +140,7 @@ export const DEFAULT_SETTINGS: FlintSettings = {
   favoriteModels: [],
   systemPrompt: "",
   agentFilePath: "",
-  skillFolders: [],
+  disabledSkills: [],
   enabledTools: [...DEFAULT_ENABLED_TOOL_NAMES],
   sessionStoragePath: "Flint/Sessions",
   compactionSettings: { ...DEFAULT_COMPACTION_SETTINGS },
@@ -154,7 +160,7 @@ export function normalizeSettings(
     favoriteModels: raw?.favoriteModels ?? [],
     systemPrompt: raw?.systemPrompt ?? "",
     agentFilePath: raw?.agentFilePath ?? "",
-    skillFolders: raw?.skillFolders ?? [],
+    disabledSkills: raw?.disabledSkills ?? [],
     enabledTools: raw?.enabledTools ?? DEFAULT_SETTINGS.enabledTools,
     sessionStoragePath:
       raw?.sessionStoragePath ?? DEFAULT_SETTINGS.sessionStoragePath,
@@ -198,12 +204,18 @@ export function buildCustomModels(
 
 export function allModels(
   customProviders: CustomProviderConfig[],
+  providerAuth: Record<string, ProviderAuthConfig> = {},
 ): Model<Api>[] {
   return [
     ...buildCustomModels(customProviders),
-    ...getProviders().flatMap(
-      (provider) => getModels(provider as never) as Model<Api>[],
-    ),
+    ...getProviders().flatMap((provider) => {
+      const models = getModels(provider as never) as Model<Api>[];
+      const proxyBaseUrl = providerAuth[provider]?.proxyBaseUrl
+        ?.trim()
+        .replace(/\/+$/, "");
+      if (!proxyBaseUrl) return models;
+      return models.map((model) => ({ ...model, baseUrl: proxyBaseUrl }));
+    }),
   ];
 }
 
@@ -211,25 +223,30 @@ export function findModel(
   customProviders: CustomProviderConfig[],
   provider: string,
   modelId: string,
+  providerAuth: Record<string, ProviderAuthConfig> = {},
 ): Model<Api> | undefined {
-  return allModels(customProviders).find(
+  return allModels(customProviders, providerAuth).find(
     (model) => model.provider === provider && model.id === modelId,
   );
 }
 
 export function providerNames(
   customProviders: CustomProviderConfig[],
+  providerAuth: Record<string, ProviderAuthConfig> = {},
 ): string[] {
   return Array.from(
-    new Set(allModels(customProviders).map((model) => model.provider)),
+    new Set(
+      allModels(customProviders, providerAuth).map((model) => model.provider),
+    ),
   ).sort((a, b) => a.localeCompare(b));
 }
 
 export function modelsForProvider(
   customProviders: CustomProviderConfig[],
   provider: string,
+  providerAuth: Record<string, ProviderAuthConfig> = {},
 ): Model<Api>[] {
-  return allModels(customProviders)
+  return allModels(customProviders, providerAuth)
     .filter((model) => model.provider === provider)
     .sort((a, b) => a.id.localeCompare(b.id));
 }
@@ -238,7 +255,7 @@ export function ensureValidSelection(
   settings: FlintSettings,
   hasCredential?: (provider: string) => boolean,
 ): void {
-  const all = allModels(settings.customProviders);
+  const all = allModels(settings.customProviders, settings.providerAuth);
   if (all.length === 0) return;
 
   // First launch: provider and modelId are both empty.
@@ -259,6 +276,7 @@ export function ensureValidSelection(
   const providerModels = modelsForProvider(
     settings.customProviders,
     settings.provider,
+    settings.providerAuth,
   );
   if (providerModels.some((model) => model.id === settings.modelId)) return;
 
