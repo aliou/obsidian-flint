@@ -18,8 +18,8 @@
   "dependencies": {
     "@aliou/obsdx-base-ast": "^0.0.6",
     "@aliou/obsdx-base-engine": "^0.0.6",
-    "@earendil-works/pi-agent-core": "^0.75.1",
-    "@earendil-works/pi-ai": "^0.75.1",
+    "@earendil-works/pi-agent-core": "^0.77.0",
+    "@earendil-works/pi-ai": "^0.77.0",
     "typebox": "^1.1.38"
   },
   "devDependencies": {
