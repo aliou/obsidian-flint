@@ -8,9 +8,12 @@ This repository builds the `flint` Obsidian plugin. It embeds Pi `AgentHarness` 
 
 Key files:
 
-- `src/main.ts`: plugin lifecycle, settings persistence, view registration, fetch patch setup, and skill file watchers.
-- `src/chat/controller.ts`: chat state, session orchestration, skill loading, and tool enable/disable.
-- `src/chat/harness.ts`: `AgentHarness` construction and model credential wiring.
+- `src/main.ts`: plugin lifecycle, settings persistence, view registration, fetch patch setup, skill file watchers, and export/rerun commands.
+- `src/chat/controller.ts`: `AgentController` — chat state, harness lifecycle, session orchestration, skill loading, tool enable/disable, and export.
+- `src/chat/harness.ts`: `createObsidianHarness()` — `AgentHarness` construction, model resolution, credential wiring, and system prompt builder.
+- `src/chat/harness-events.ts`: `applyHarnessEvent()` and `rebuildToolRunsFromMessages()` — reactive state updates from harness event stream.
+- `src/chat/session-stats.ts`: token/cost/context-window aggregation for session stats.
+- `src/chat/composer-helpers.ts`: slash command parsing (`/compact`, `/reload`, `/skill:<name>`), wikilink suggestion building, and middle-truncation helpers.
 - `src/chat/system-prompt.ts`: Obsidian-specific system prompt construction.
 - `src/chat/view.ts`: sidebar chat UI (desktop and mobile view classes), composer autocomplete, slash commands, vault path links, and mobile status bar.
 - `src/chat/layout.ts`: layout clearance for Obsidian chrome, mobile keyboard handling, status bar overlap.
@@ -19,14 +22,20 @@ Key files:
 - `src/export/markdown.ts`: Markdown export builder (frontmatter, callouts, tool blocks).
 - `src/export/service.ts`: Markdown export orchestration (file creation, folder setup, open-in-tab).
 - `src/harness/env/`: Obsidian-backed `ExecutionEnv`.
-- `src/harness/model-registry/`: lightweight provider/model registry for settings and model selection.
+- `src/harness/model-registry/index.ts`: `ModelRegistry` — provider/model registry, selection, favorites, custom provider CRUD, and credential-aware fallback.
 - `src/harness/secrets/manager.ts`: Obsidian `SecretStorage` integration, credential resolution, and model discovery.
+- `src/harness/skills/discovery.ts`: vault-wide `SKILL.md` folder scanning for skill auto-discovery.
 - `src/harness/session/`: JSONL session storage under `Flint/Sessions` by default.
 - `src/harness/tools/`: vault and Bases tools exposed to the agent, with per-tool DOM and markdown renderers.
-- `src/settings/store.ts`: settings load/save/update, change notifications, and fetch shim refresh.
-- `src/settings/tab.ts`: settings tab shell and page navigation.
-- `src/settings/tabs/`: individual settings pages (chat, skills, tools, exports, advanced, providers).
-- `src/settings/views/`: settings modals, suggesters, and other reusable setting views.
+- `src/harness/tools/guardrails.ts`: path validation, blocked-path checks, glob matching, property type inference, and text-readable extension set.
+- `src/harness/tools/vault/`: vault content tools (`ls`, `read`, `write`, `mkdir`, `delete`, `find`, `search`).
+- `src/harness/tools/base/`: Bases tools (`list_bases`, `query_base`) and Base file parsing/metadata helpers.
+- `src/icon.ts`: `FLINT_ICON` SVG constant for the sidebar ribbon.
+- `src/settings/store.ts`: `FlintSettingsStore` — settings load/save/update, change notifications, session path change listeners, and fetch shim refresh.
+- `src/settings/tab.ts`: `FlintSettingsTab` — Obsidian 1.13+ navigable settings API with sub-pages.
+- `src/settings/tabs/`: individual settings pages (model, context, tools, exports, advanced, providers, skills).
+- `src/settings/types.ts`: `FlintSettings` type, default values, model/provider helpers, `ToolRun`, `SessionStats`, and formatting utilities.
+- `src/settings/views/`: settings modals (`CustomProviderModal`, `ModelConfigModal`) and suggesters (`FileSuggest`, `FolderSuggest`).
 - `src/shims/*`: browser/Obsidian-safe shims for Pi dependencies. See `docs/shims.md`.
 - `src/utils/errors.ts`: error formatting helper.
 
@@ -89,13 +98,14 @@ Pi packages are npm dependencies. `vite.config.ts` maps Node-oriented Pi depende
 - Session format is version 3 JSONL: header line with `{ type: "session", version: 3, id, timestamp }` followed by `SessionTreeEntry` lines.
 - Corrupt session lines are intentionally skipped during reads.
 - Session deletion is guarded to only remove `.jsonl` files under the configured session root.
-- Session forking (branching from a specific entry) is supported by the repo but not exposed in the UI yet.
+- Session forking (branching from a specific entry) is supported by the session layer but not exposed in the UI yet.
+- `AgentController.resumeSession()` rebuilds messages and tool runs from a stored session before creating a new harness.
 - Compaction settings control automatic session history summarization: `enabled`, `reserveTokens`, `keepRecentTokens`, and optional `compactionCustomPrompt`.
 - `/compact` in the composer manually runs compaction for the current session.
 
 ## Chat UI notes
 
-- Composer slash suggestions are implemented in `src/chat/view.ts`. `/compact` runs manual compaction, and `/skill:<name>` calls `AgentHarness.skill()` with any trailing text as additional instructions.
+- Composer slash command parsing lives in `src/chat/composer-helpers.ts`. Supported commands: `/compact` (manual compaction), `/reload` (rebuilds the harness to pick up resource changes), and `/skill:<name>` (calls `AgentHarness.skill()` with any trailing text as additional instructions).
 - Composer wikilink suggestions trigger on `[[`, show above the input shell, list five files, display the filename with middle truncation, and show only the containing directory on the second line.
 - The filename middle-truncation uses two spans and flexbox. Keep the suffix span whitespace-preserving so names split before spaces still render correctly.
 - Empty chat prompt chips come from `emptyStateSuggestions` and are configured on the Chat settings page.
@@ -116,7 +126,9 @@ Pi packages are npm dependencies. `vite.config.ts` maps Node-oriented Pi depende
 - Each vault tool implements the `ObsidianTool` interface which extends `AgentTool` with optional `promptGuidelines`, `renderTitle`, `renderBody`, and `renderMarkdown`.
 - `ToolRenderAdapter` (in `tool-render-types.ts`) erases the generic types and provides default fallbacks for tools without custom renderers. It also guards title rendering so old sessions with malformed arguments do not break chat rendering.
 - `ToolRenderContext` passes `app`, `component`, `status`, and `isMobile` to DOM renderers.
-- The `query_base` tool depends on `@aliou/obsdx-base-engine` for execution and `@aliou/obsdx-base-ast` for parsing.
+- The `query_base` tool depends on `@aliou/obsdx-base-engine` for execution and `@aliou/obsdx-base-ast` for parsing and validation.
+- `metadata.ts` provides `inspectMarkdownFile()` which builds a `BaseFileInspection` from Obsidian's `MetadataCache` (frontmatter properties, tags, links, backlinks, embeds).
+- `guardrails.ts` centralizes path validation (`normalizeVaultToolPath`, `validateToolPath`, `isBlockedVaultPath`), glob matching (`matchGlob`, `matchVaultPattern`), and file-kind helpers (`kindForFile`, `isTextReadable`, `filterVisibleFiles`).
 - Base context detection (`baseRequiresContext`) checks formulas, filters, and summaries for `this` references using both string scanning and AST-based inspection.
 - Truncation defaults: 2000 lines / 50KB (matching Pi agent defaults).
 - Vault tool headers should use short display names via `pathDisplayName()`. Keep full paths in expanded tool details and Markdown exports.
