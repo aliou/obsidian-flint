@@ -1,85 +1,71 @@
 # Flint
 
-**Flint is an Obsidian plugin to have an agent inside of your vaults. It can see and do everything you can do in your vault.**
+An AI assistant that lives inside your Obsidian vault.
 
-Flint lives in your sidebar. Ask it to find notes, write drafts, reorganize folders, search across your vault, query Bases — anything you'd do yourself, but faster. It reads your files, understands your structure, and acts on your instructions directly inside Obsidian.
+Flint embeds a Pi agent in the Obsidian sidebar. It can read and write notes, search your files, query Obsidian Bases, and export conversations as Markdown — all without leaving Obsidian.
 
-## What Flint can do
+## Preview
 
-### Work with your vault
+### Chat with your vault
 
-Flint has direct access to your vault's files and folders. It can:
+![Flint chat interface](https://assets.aliou.me/github/flint/flint-chat.gif)
 
-- **List and browse** folders and their contents
-- **Read** notes, text files, and Bases (with support for large files)
-- **Write** new notes or update existing ones (creating parent folders as needed)
-- **Delete** files (moves to trash, respecting your Obsidian settings)
-- **Create folders** anywhere in your vault
-- **Find files** by name, path, or glob pattern — filtered by type
-- **Search** file contents with regex or plain text, with context around matches
+Ask questions, draft notes, reorganize folders, search across files, or work through ideas. Flint responds with full access to your vault when it needs it.
 
-### Query Obsidian Bases
+### Slash commands and wikilinks
 
-Flint understands Bases natively — list them, inspect their views and columns, and run queries directly.
+![Slash commands and wikilink suggestions](https://assets.aliou.me/github/flint/flint-commands-wikilinks.gif)
 
-All vault operations automatically skip hidden system paths (`.obsidian`, etc.).
+Type `/` for built-in commands (`/compact`, `/reload`, `/skill:<name>`). Type `[[` to reference vault files with wikilink autocomplete.
 
-## Chat
+### Model picker
 
-Open Flint from the sidebar. Type a message and it responds — with full access to your vault when it needs it.
+![Model picker with favorites and thinking level](https://assets.aliou.me/github/flint/flint-model-picker.gif)
 
-**Wikilink autocomplete** — Type `[[` to reference vault files directly in your message. The autocomplete shows filenames and their parent folder for easy identification.
+Switch models, set favorites, and adjust reasoning level from the chat header.
 
-**Commands** — Type `/` to see available commands:
-- `/compact` — Summarize and compress a long conversation to keep things fast
-- `/skill:<name>` — Run a configured skill with optional extra instructions
+### Markdown export
 
-**Prompt chips** — An empty chat shows configurable quick-start prompts to get you going.
+![Conversation exported as Markdown with callouts](https://assets.aliou.me/github/flint/flint-markdown-export.gif)
 
-**Clickable vault paths** — When Flint mentions a file like `/Notes/file.md`, click it to open the file directly in Obsidian.
+Export any conversation to your vault as a Markdown file, formatted with Obsidian callouts for reasoning and tool calls.
 
-**Sessions** — Conversations are saved automatically. Browse, resume, or delete past sessions from the session history panel.
+## Features
 
-**Model picker** — Switch models, set favorites, and adjust thinking level from the chat header.
+- **Vault file access** — list, read, write, delete, create folders, find by name or glob, and search contents with regex
+- **Obsidian Bases** — list available Bases and query structured data directly from chat
+- **Slash commands** — `/compact` to compress a long conversation, `/reload` to refresh the harness, `/skill:<name>` to run a skill
+- **Wikilink suggestions** — type `[[` to autocomplete vault file references
+- **Clickable vault paths** — file paths in assistant responses open directly in Obsidian
+- **Session history** — conversations are saved automatically; browse, resume, or delete past sessions
+- **Model picker with favorites** — switch providers and models, pin favorites, adjust thinking level
+- **Skills** — load custom skills from SKILL.md files in your vault; Flint watches for changes and reloads automatically
+- **Custom system prompt** — configure base instructions or point to an AGENTS.md file for project-level context
+- **Markdown export** — save conversations as Markdown with YAML frontmatter, optional reasoning callouts, and tool call blocks
+- **Multiple providers** — built-in Pi providers plus any OpenAI-compatible API; API keys stored in Obsidian's secret storage
+- **Mobile support** — compact layout and status bar for Obsidian mobile
 
-**Works on mobile** — Flint adapts its layout for smaller screens with a compact status bar.
+## Installation
 
-## Skills and customization
+### Obsidian Community Plugins
 
-- **System prompt** — Customize the base instructions Flint follows.
-- **AGENTS.md** — Add project-level instructions that Flint picks up automatically.
-- **Skills** — Point Flint at skill folders and it watches for changes, reloading automatically.
-- **Tool toggles** — Enable or disable individual vault tools from settings.
-- **Compaction** — Configure automatic conversation compaction, or trigger it manually with `/compact`.
+1. Open **Settings > Community plugins**
+2. Disable **Restricted mode** if needed
+3. Search for **Flint**
+4. Install and enable the plugin
 
-## Providers
+### Manual installation
 
-Flint works with built-in Pi providers and any OpenAI-compatible API. Add a custom provider by pointing to a base URL — Flint discovers available models automatically.
+1. Download the latest release
+2. Copy `main.js`, `manifest.json`, and `styles.css` into `<vault>/.obsidian/plugins/flint/`
+3. Reload Obsidian and enable Flint in **Community plugins**
 
-API keys are stored securely using Obsidian's secret storage.
+## Privacy
 
-## Export conversations
+Flint operates inside your vault. The assistant can only act on files and data exposed through the plugin. Vault system directories (`.obsidian`, `.pi`) are blocked from tool access.
 
-Export any conversation as a Markdown file with frontmatter. Choose whether to include reasoning blocks and tool calls. Exports are saved to a configurable folder (default: `Flint Exports`) and open in a new tab.
+API keys are stored in Obsidian's secret storage, not in plugin settings files. Review your provider configuration before using Flint with sensitive notes.
 
-Export from the chat header button, the command palette, or the editor context menu.
+## Contributing
 
-## Under the hood
-
-Flint is built on top of [Pi's AgentHarness](https://github.com/earendil-works/pi) abstraction, adapted to run inside Obsidian with vault-scoped file access and Obsidian-native secret storage.
-
-## Build from source
-
-```bash
-npm install
-npm run build
-```
-
-Output goes to `dist/` — copy `main.js`, `manifest.json`, and `styles.css` into your vault's plugin folder, then enable Flint in Obsidian settings.
-
-Optional checks before building:
-
-```bash
-npm run check   # type-check
-npm run lint    # lint
-```
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup and project guidelines.
