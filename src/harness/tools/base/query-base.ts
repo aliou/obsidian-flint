@@ -243,17 +243,7 @@ export function createQueryBaseTool(
         return;
       }
 
-      const totalRows = details?.totalRows ?? rows.length;
-      const offset = details?.offset ?? 1;
       const section = el.createDiv("flint-chat-tool-section");
-
-      const countText = details?.hasMore
-        ? `Rows ${offset}-${offset + rows.length - 1} of ${totalRows}`
-        : `${totalRows} row${totalRows === 1 ? "" : "s"}`;
-      section.createDiv({
-        cls: "flint-chat-tool-section-title",
-        text: countText,
-      });
 
       const columns = details?.columns ?? [];
       const visibleColumns = columns.slice(0, ctx.isMobile ? 4 : 8);
@@ -305,8 +295,6 @@ export function createQueryBaseTool(
       const visibleColumns = columns.slice(0, 8);
       const keys = visibleColumns.map((c) => c.displayName || c.id);
 
-      const totalRows = details?.totalRows ?? rows.length;
-      const offset = details?.offset ?? 1;
       const header = `| File | ${keys.join(" | ")} |`;
       const sep = `| --- | ${keys.map(() => "---").join(" | ")} |`;
       const body = rows.slice(0, 50).map((row) => {
@@ -322,10 +310,7 @@ export function createQueryBaseTool(
         return `| ${file} | ${cells.join(" | ")} |`;
       });
 
-      const showing = details?.hasMore
-        ? ` (showing rows ${offset}-${offset + rows.length - 1} of ${totalRows})`
-        : "";
-      return `**${totalRows} row${totalRows === 1 ? "" : "s"}${showing}**\n\n${header}\n${sep}\n${body.join("\n")}`;
+      return `${header}\n${sep}\n${body.join("\n")}`;
     },
   };
 }
