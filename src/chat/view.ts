@@ -377,6 +377,10 @@ abstract class BaseFlintView extends ItemView {
       await this.plugin.agent.reloadHarness();
       return;
     }
+    if (slash?.command === "model") {
+      new ModelPickerModal(this.plugin).open();
+      return;
+    }
     if (slash?.command === "skill") {
       await this.plugin.agent.runSkill(slash.name, slash.args);
       return;
@@ -514,6 +518,12 @@ abstract class BaseFlintView extends ItemView {
         command: "/compact",
         label: "/compact",
         description: "Compact the current conversation",
+        kind: "action",
+      },
+      {
+        command: "/model",
+        label: "/model",
+        description: "Switch model or adjust thinking level",
         kind: "action",
       },
       {

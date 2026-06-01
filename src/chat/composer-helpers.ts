@@ -69,12 +69,15 @@ export function parseSlashCommand(
 ):
   | { command: "compact"; args?: string }
   | { command: "reload" }
+  | { command: "model" }
   | { command: "skill"; name: string; args?: string }
   | undefined {
   const compactMatch = text.match(/^\/compact(?:\s+([\s\S]*))?$/);
   if (compactMatch) return { command: "compact", args: compactMatch[1] };
 
   if (/^\/reload$/.test(text)) return { command: "reload" };
+
+  if (/^\/model$/.test(text)) return { command: "model" };
 
   const skillMatch = text.match(/^\/skill:([^\s]+)(?:\s+([\s\S]*))?$/);
   if (skillMatch?.[1]) {
