@@ -22,7 +22,7 @@ Type `/` for built-in commands (`/compact`, `/reload`, `/skill:<name>`). Type `[
 
 [![Model picker with favorites and thinking level](https://assets.aliou.me/github/flint/flint-model-picker.gif)](https://assets.aliou.me/github/flint/flint-model-picker.mp4)
 
-Switch models, set favorites, and adjust reasoning level from the chat header.
+Switch models, set favorites, and adjust reasoning level using the `/model` command.
 
 ### Markdown export
 
@@ -36,7 +36,7 @@ Export any conversation to your vault as a Markdown file, formatted with Obsidia
 - **Obsidian Bases** — list available Bases and query structured data directly from chat
 - **Slash commands** — `/compact` to compress a long conversation, `/model` to switch models, `/reload` to refresh the harness, `/skill:<name>` to run a skill
 - **Wikilink suggestions** — type `[[` to autocomplete vault file references
-- **Clickable vault paths** — file paths in assistant responses open directly in Obsidian
+- **Clickable vault paths and wikilinks** — file paths and `[[notes]]` in assistant responses open directly in Obsidian
 - **Session history** — conversations are saved automatically; browse, resume, or delete past sessions
 - **Model picker with favorites** — switch providers and models, pin favorites, adjust thinking level
 - **Skills** — load custom skills from SKILL.md files in your vault; Flint watches for changes and reloads automatically
