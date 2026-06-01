@@ -47,18 +47,9 @@ Export any conversation to your vault as a Markdown file, formatted with Obsidia
 
 ## Installation
 
-### Obsidian Community Plugins
-
-1. Open **Settings > Community plugins**
-2. Disable **Restricted mode** if needed
-3. Search for **Flint**
-4. Install and enable the plugin
-
-### Manual installation
-
 1. Download the latest release
 2. Copy `main.js`, `manifest.json`, and `styles.css` into `<vault>/.obsidian/plugins/flint/`
-3. Reload Obsidian and enable Flint in **Community plugins**
+3. Reload Obsidian and enable Flint in **Settings > Community plugins**
 
 ## Privacy
 
