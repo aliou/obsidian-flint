@@ -8,25 +8,25 @@ Flint embeds a Pi agent in the Obsidian sidebar. It can read and write notes, se
 
 ### Chat with your vault
 
-![Flint chat interface](https://assets.aliou.me/github/flint/flint-chat.gif)
+[![Flint chat interface](https://assets.aliou.me/github/flint/flint-chat.gif)](https://assets.aliou.me/github/flint/flint-chat.mp4)
 
 Ask questions, draft notes, reorganize folders, search across files, or work through ideas. Flint responds with full access to your vault when it needs it.
 
 ### Slash commands and wikilinks
 
-![Slash commands and wikilink suggestions](https://assets.aliou.me/github/flint/flint-commands-wikilinks.gif)
+[![Slash commands and wikilink suggestions](https://assets.aliou.me/github/flint/flint-commands-wikilinks.gif)](https://assets.aliou.me/github/flint/flint-commands-wikilinks.mp4)
 
 Type `/` for built-in commands (`/compact`, `/reload`, `/skill:<name>`). Type `[[` to reference vault files with wikilink autocomplete.
 
 ### Model picker
 
-![Model picker with favorites and thinking level](https://assets.aliou.me/github/flint/flint-model-picker.gif)
+[![Model picker with favorites and thinking level](https://assets.aliou.me/github/flint/flint-model-picker.gif)](https://assets.aliou.me/github/flint/flint-model-picker.mp4)
 
 Switch models, set favorites, and adjust reasoning level from the chat header.
 
 ### Markdown export
 
-![Conversation exported as Markdown with callouts](https://assets.aliou.me/github/flint/flint-markdown-export.gif)
+[![Conversation exported as Markdown with callouts](https://assets.aliou.me/github/flint/flint-markdown-export.gif)](https://assets.aliou.me/github/flint/flint-markdown-export.mp4)
 
 Export any conversation to your vault as a Markdown file, formatted with Obsidian callouts for reasoning and tool calls.
 
@@ -34,7 +34,7 @@ Export any conversation to your vault as a Markdown file, formatted with Obsidia
 
 - **Vault file access** — list, read, write, delete, create folders, find by name or glob, and search contents with regex
 - **Obsidian Bases** — list available Bases and query structured data directly from chat
-- **Slash commands** — `/compact` to compress a long conversation, `/reload` to refresh the harness, `/skill:<name>` to run a skill
+- **Slash commands** — `/compact` to compress a long conversation, `/model` to switch models, `/reload` to refresh the harness, `/skill:<name>` to run a skill
 - **Wikilink suggestions** — type `[[` to autocomplete vault file references
 - **Clickable vault paths** — file paths in assistant responses open directly in Obsidian
 - **Session history** — conversations are saved automatically; browse, resume, or delete past sessions
