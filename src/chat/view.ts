@@ -48,6 +48,9 @@ type ObsidianAppWithSetting = {
 const OBSIDIAN_WIKILINK_RE =
   /<obsidian-wikilink\s+path="([^"]+)">([\s\S]*?)<\/obsidian-wikilink>/gu;
 
+const SKILL_BLOCK_RE =
+  /<skill name="([^"]+)" location="([^"]+)">([\s\S]*?)<\/skill>(?:\n\n([\s\S]+))?/;
+
 abstract class BaseFlintView extends ItemView {
   private unsubscribe?: () => void;
   private messagesEl?: HTMLElement;
@@ -825,8 +828,7 @@ abstract class BaseFlintView extends ItemView {
     const role = message.role;
 
     if (role === "user") {
-      const card = this.messagesEl.createDiv("flint-chat-user-message");
-      this.renderUserContent(card, message.content);
+      this.renderUserMessage(message.content);
       return;
     }
 
@@ -867,22 +869,37 @@ abstract class BaseFlintView extends ItemView {
     );
   }
 
-  private renderUserContent(parent: HTMLElement, content: unknown): void {
-    if (!Array.isArray(content)) {
-      const textEl = parent.createDiv("flint-chat-user-text");
-      this.renderUserText(textEl, contentText(content));
+  private renderUserMessage(content: unknown): void {
+    const text = Array.isArray(content)
+      ? content
+          .filter(
+            (part): part is { type: "text"; text: string } =>
+              part?.type === "text" && typeof part.text === "string",
+          )
+          .map((part) => part.text)
+          .join("\n")
+      : contentText(content);
+
+    if (!text) return;
+
+    const parsed = this.parseSkillBlock(text);
+    if (parsed) {
+      const skillEl = this.messagesEl?.createDiv("flint-chat-skill-invocation");
+      if (!skillEl) return;
+      this.renderSkillBlock(skillEl, parsed);
+      if (parsed.userMessage) {
+        const card = this.messagesEl?.createDiv("flint-chat-user-message");
+        if (card) {
+          const textEl = card.createDiv("flint-chat-user-text");
+          this.renderUserText(textEl, parsed.userMessage);
+        }
+      }
       return;
     }
 
-    const text = content
-      .filter(
-        (part): part is { type: "text"; text: string } =>
-          part?.type === "text" && typeof part.text === "string",
-      )
-      .map((part) => part.text)
-      .join("\n");
-    if (text) {
-      const textEl = parent.createDiv("flint-chat-user-text");
+    const card = this.messagesEl?.createDiv("flint-chat-user-message");
+    if (card) {
+      const textEl = card.createDiv("flint-chat-user-text");
       this.renderUserText(textEl, text);
     }
   }
@@ -928,6 +945,41 @@ abstract class BaseFlintView extends ItemView {
         "",
         Keymap.isModEvent(event),
       );
+    });
+  }
+
+  private parseSkillBlock(text: string): {
+    name: string;
+    location: string;
+    content: string;
+    userMessage: string | undefined;
+  } | null {
+    const match = text.match(SKILL_BLOCK_RE);
+    if (!match) return null;
+    return {
+      name: match[1],
+      location: match[2],
+      content: match[3],
+      userMessage: match[4]?.trim() || undefined,
+    };
+  }
+
+  private renderSkillBlock(
+    parent: HTMLElement,
+    parsed: { name: string; content: string },
+  ): void {
+    const header = parent.createDiv("flint-chat-skill-header");
+    const chevron = header.createDiv("flint-chat-skill-chevron");
+    setIcon(chevron, "chevron-right");
+    header.createDiv({
+      cls: "flint-chat-skill-label",
+      text: parsed.name,
+    });
+    const body = parent.createDiv("flint-chat-skill-body");
+    const stripped = parsed.content.replace(/^---[\s\S]*?---\n*/, "");
+    this.renderMarkdownBlock(body, stripped);
+    header.addEventListener("click", () => {
+      parent.classList.toggle("is-expanded");
     });
   }
 

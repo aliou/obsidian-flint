@@ -375,6 +375,63 @@ button.flint-chat-primary-action {
   overflow-wrap: anywhere;
 }
 
+
+.flint-chat-skill-invocation {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-secondary);
+  overflow: hidden;
+}
+
+.flint-chat-skill-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.flint-chat-skill-header:hover {
+  background: var(--background-modifier-hover);
+}
+
+.flint-chat-skill-chevron {
+  color: var(--text-faint);
+  transition: transform 0.15s ease;
+  display: flex;
+  align-items: center;
+}
+
+.flint-chat-skill-invocation.is-expanded .flint-chat-skill-chevron {
+  transform: rotate(90deg);
+}
+
+.flint-chat-skill-label {
+  font-size: var(--font-smallest);
+  font-weight: 600;
+  color: var(--text-normal);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.flint-chat-skill-body {
+  display: none;
+  padding: 0 12px 8px 12px;
+}
+
+.flint-chat-skill-invocation.is-expanded .flint-chat-skill-body {
+  display: block;
+}
+
+.flint-chat-skill-body .flint-chat-markdown {
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+}
+
+.flint-chat-markdown .copy-code-button {
+  display: none;
+}
 .flint-chat-assistant {
   user-select: text;
   display: flex;
