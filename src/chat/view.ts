@@ -985,6 +985,7 @@ abstract class BaseFlintView extends ItemView {
     const block = parent.createDiv("flint-chat-markdown");
     void MarkdownRenderer.render(this.app, text, block, "", this).then(() => {
       this.linkVaultPaths(block);
+      this.linkInternalLinks(block);
       this.wrapMarkdownTables(block);
     });
   }
@@ -1053,6 +1054,24 @@ abstract class BaseFlintView extends ItemView {
       if (file instanceof TFile) return { displayPath, file };
     }
     return undefined;
+  }
+
+  private linkInternalLinks(block: HTMLElement): void {
+    const links = block.querySelectorAll<HTMLAnchorElement>("a.internal-link");
+    for (const link of links) {
+      const href = link.getAttribute("data-href") ?? link.getAttribute("href");
+      if (!href) continue;
+      link.removeAttribute("target");
+      link.removeAttribute("rel");
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        void this.app.workspace.openLinkText(
+          href,
+          "",
+          Keymap.isModEvent(event),
+        );
+      });
+    }
   }
 
   private wrapMarkdownTables(block: HTMLElement): void {
