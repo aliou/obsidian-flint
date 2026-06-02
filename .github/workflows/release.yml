@@ -79,7 +79,7 @@ jobs:
 
   release:
     name: GitHub Release
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -87,6 +87,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
 
       - uses: pnpm/action-setup@v5
 
@@ -95,20 +97,46 @@ jobs:
           node-version: "25"
           cache: "pnpm"
 
+      - name: Get release tag
+        id: release-tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ "${EVENT_NAME}" = "push" ]; then
+            TAG="${REF_NAME}"
+          else
+            VERSION=$(node -p "require('./package.json').version")
+            TAG="v${VERSION}"
+          fi
+
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            echo "skip=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "skip=false" >> "${GITHUB_OUTPUT}"
+          fi
+          echo "tag=${TAG}" >> "${GITHUB_OUTPUT}"
+
       - name: Install dependencies
+        if: steps.release-tag.outputs.skip != 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Build
+        if: steps.release-tag.outputs.skip != 'true'
         run: pnpm build
 
       - name: Create GitHub release
+        if: steps.release-tag.outputs.skip != 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.release-tag.outputs.tag }}
+          TARGET: ${{ github.event.workflow_run.head_sha || github.sha }}
         run: |
-          TAG="${GITHUB_REF_NAME}"
           gh release create "${TAG}" \
             dist/main.js \
             dist/manifest.json \
             dist/styles.css \
+            --target "${TARGET}" \
             --title "${TAG}" \
             --notes "Release ${TAG}"
