@@ -194,7 +194,15 @@ async function obsidianFetch(
   state: FetchPatchState,
 ): Promise<Response> {
   const url = requestUrlString(input);
-  const parsed = new URL(url);
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch (error) {
+    // Obsidian core can call fetch with app-relative URLs. Keep those on the
+    // native fetch path instead of forcing URL parsing for Flint API calls.
+    if (!state.originalFetch) throw error;
+    return state.originalFetch(input, init);
+  }
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
     if (!state.originalFetch)
       throw new Error(`Unsupported fetch protocol: ${parsed.protocol}`);
