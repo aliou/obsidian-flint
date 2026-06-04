@@ -1,13 +1,14 @@
-import type {
-  AgentHarness,
-  AgentMessage,
-  Session,
-  Skill,
-  ThinkingLevel,
+import {
+  type AgentHarness,
+  type AgentMessage,
+  loadSkills,
+  type Session,
+  type Skill,
+  type ThinkingLevel,
 } from "@earendil-works/pi-agent-core";
-import { loadSkills } from "@earendil-works/pi-agent-core";
 import type { Api, Model } from "@earendil-works/pi-ai";
 import { type App, normalizePath } from "obsidian";
+import { autoNameSession } from "@/chat/auto-name";
 import {
   applyHarnessEvent,
   rebuildToolRunsFromMessages,
@@ -59,8 +60,10 @@ export class AgentController {
   toolRuns = new Map<string, ToolRun>();
   toolsByName = new Map<string, ToolRenderAdapter>();
   isRunning = false;
+  isAutoTitling = false;
   currentSessionPath = "";
   currentSessionId = "";
+  private cachedSessionName?: string;
   skillsStale = false;
   private skills: Skill[] = [];
   private unsubscribeHarness?: () => void;
@@ -72,7 +75,7 @@ export class AgentController {
   }
 
   getSessionTitle(): string {
-    return sessionNameFromMessages(this.messages) ?? "Flint";
+    return this.cachedSessionName ?? "Flint";
   }
 
   getToolAdapter(name: string): ToolRenderAdapter | undefined {
@@ -103,9 +106,12 @@ export class AgentController {
 
     await this.reloadSkills();
 
-    this.unsubscribeHarness = this.harness.subscribe((event) =>
-      this.handleHarnessEvent(event),
-    );
+    this.unsubscribeHarness = this.harness.subscribe((event) => {
+      this.handleHarnessEvent(event);
+      if (event.type === "settled") {
+        void this.maybeAutoTitleSession();
+      }
+    });
   }
 
   async sendPrompt(text: string): Promise<void> {
@@ -165,6 +171,13 @@ export class AgentController {
     if (this.harness && this.isRunning) await this.harness.abort();
   }
 
+  async renameSession(name: string): Promise<void> {
+    if (!this.session) return;
+    await this.session.appendSessionName(name);
+    this.cachedSessionName = name;
+    this.deps.onStateChange();
+  }
+
   markSkillsStale(): void {
     if (this.skillsStale) return;
     this.skillsStale = true;
@@ -197,10 +210,12 @@ export class AgentController {
     this.unsubscribeHarness = undefined;
     this.harness = undefined;
     this.session = undefined;
+    this.cachedSessionName = undefined;
     this.messages = [];
     this.toolRuns.clear();
     this.toolsByName.clear();
     this.isRunning = false;
+    this.isAutoTitling = false;
     this.currentSessionPath = "";
     this.currentSessionId = "";
     this.skillsStale = false;
@@ -259,6 +274,8 @@ export class AgentController {
     this.messages = context.messages;
     rebuildToolRunsFromMessages(this.toolRuns, context.messages);
     await this.createHarness(metadata);
+    const sessionName = await this.session?.getSessionName();
+    this.cachedSessionName = sessionName ?? undefined;
     this.deps.onStateChange();
   }
 
@@ -272,6 +289,7 @@ export class AgentController {
     if (path === this.currentSessionPath) {
       this.harness = undefined;
       this.session = undefined;
+      this.cachedSessionName = undefined;
       this.messages = [];
       this.toolRuns.clear();
       this.toolsByName.clear();
@@ -302,6 +320,35 @@ export class AgentController {
       this.messages,
       this.deps.modelRegistry.getCurrentModel(),
     );
+  }
+
+  /** Try to auto-title the session after the first successful turn. */
+  private async maybeAutoTitleSession(): Promise<void> {
+    const session = this.session;
+    if (!session) return;
+
+    this.isAutoTitling = true;
+    this.deps.onStateChange();
+
+    const named = await autoNameSession(
+      session,
+      this.messages,
+      this.deps.getSettings().autoNameSettings,
+      {
+        resolveCredential: (model) => this.deps.resolveCredential(model),
+        getModel: (provider, modelId) =>
+          this.deps.modelRegistry.getModel(provider, modelId),
+        getCurrentModel: () => this.deps.modelRegistry.getCurrentModel(),
+      },
+    );
+
+    if (named) {
+      const sessionName = await session.getSessionName();
+      if (sessionName) this.cachedSessionName = sessionName;
+    }
+
+    this.isAutoTitling = false;
+    this.deps.onStateChange();
   }
 
   private handleHarnessEvent(

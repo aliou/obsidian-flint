@@ -9,6 +9,10 @@ import {
   getProviders,
   type Model,
 } from "@earendil-works/pi-ai";
+import {
+  type AutoNameSettings,
+  DEFAULT_AUTO_NAME_SETTINGS,
+} from "@/chat/auto-name";
 import { DEFAULT_ENABLED_TOOL_NAMES } from "@/harness/tools";
 
 export const VIEW_TYPE = "flint-view";
@@ -87,6 +91,8 @@ export type FlintSettings = {
   emptyStateSuggestions: string[];
   /** Markdown export behavior settings. */
   exportSettings: FlintExportSettings;
+  /** Auto-name session settings. */
+  autoNameSettings: AutoNameSettings;
 };
 
 export type { CompactionSettings } from "@earendil-works/pi-agent-core";
@@ -147,6 +153,7 @@ export const DEFAULT_SETTINGS: FlintSettings = {
   compactionCustomPrompt: "",
   emptyStateSuggestions: [...DEFAULT_EMPTY_STATE_SUGGESTIONS],
   exportSettings: { ...DEFAULT_EXPORT_SETTINGS },
+  autoNameSettings: { ...DEFAULT_AUTO_NAME_SETTINGS },
 };
 
 export function normalizeSettings(
@@ -177,6 +184,9 @@ export function normalizeSettings(
           ...raw.exportSettings,
         }
       : { ...DEFAULT_EXPORT_SETTINGS },
+    autoNameSettings: raw?.autoNameSettings
+      ? { ...DEFAULT_AUTO_NAME_SETTINGS, ...raw.autoNameSettings }
+      : { ...DEFAULT_AUTO_NAME_SETTINGS },
   };
 }
 

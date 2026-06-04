@@ -69,6 +69,7 @@ abstract class BaseFlintView extends ItemView {
   private mobileModelChipEl?: HTMLButtonElement;
   private scrollButton?: HTMLButtonElement;
   private loadingEl?: HTMLElement;
+  private loadingLabelEl?: HTMLElement;
   private loadingTimer?: number;
   private layout?: ChatViewLayout;
   private loadingFrame = 0;
@@ -77,6 +78,7 @@ abstract class BaseFlintView extends ItemView {
   private renderRaf?: number;
   private activeScreen: "chat" | "history" = "chat";
   private slashSuggestions: SlashCommandSuggestion[] = [];
+  private headerLabelEl?: HTMLElement;
   private selectedSlashSuggestion = 0;
   private wikiLinkSuggestions: WikiLinkSuggestion[] = [];
   private selectedWikiLinkSuggestion = 0;
@@ -140,9 +142,9 @@ abstract class BaseFlintView extends ItemView {
   private renderHeader(): void {
     const header = this.contentEl.createDiv("flint-chat-header");
     const title = header.createDiv("flint-chat-header-title");
-    title.createSpan({
+    this.headerLabelEl = title.createSpan({
       cls: "flint-chat-header-label",
-      text: "Flint",
+      text: this.plugin.agent?.getSessionTitle() ?? "Flint",
     });
 
     const actions = header.createDiv("flint-chat-header-actions");
@@ -235,7 +237,7 @@ abstract class BaseFlintView extends ItemView {
     this.loadingEl = composer.createDiv("flint-chat-loading");
     this.loadingEl.style.display = "none";
     this.loadingEl.createSpan({ cls: "flint-chat-loading-frame", text: "~" });
-    this.loadingEl.createSpan({
+    this.loadingLabelEl = this.loadingEl.createSpan({
       cls: "flint-chat-loading-label",
       text: "inferring",
     });
@@ -383,6 +385,11 @@ abstract class BaseFlintView extends ItemView {
     }
     if (slash?.command === "skill") {
       await this.plugin.agent.runSkill(slash.name, slash.args);
+      return;
+    }
+    if (slash?.command === "name") {
+      const name = slash.args?.trim();
+      if (name) await this.plugin.agent.renameSession(name);
       return;
     }
     await (isRunning
@@ -533,6 +540,12 @@ abstract class BaseFlintView extends ItemView {
         description: "Reload harness to pick up resource changes",
         kind: "action",
       },
+      {
+        command: "/name",
+        label: "/name",
+        description: "Rename the current session",
+        kind: "action",
+      },
       ...this.plugin.agent.getSkills().map((skill) => ({
         command: `/skill:${skill.name}`,
         label: `/skill:${skill.name}`,
@@ -638,6 +651,7 @@ abstract class BaseFlintView extends ItemView {
 
   private render(): void {
     this.syncDisplayTitle();
+    this.syncHeaderLabel();
     if (this.composerEl)
       this.composerEl.style.display =
         this.activeScreen === "history" ? "none" : "";
@@ -653,6 +667,11 @@ abstract class BaseFlintView extends ItemView {
     const titleEls =
       this.containerEl.querySelectorAll<HTMLElement>(".view-header-title");
     for (const titleEl of titleEls) titleEl.setText(title);
+  }
+
+  private syncHeaderLabel(): void {
+    const title = this.plugin.agent?.getSessionTitle() ?? "Flint";
+    if (this.headerLabelEl) this.headerLabelEl.textContent = title;
   }
 
   private renderStats(): void {
@@ -1266,8 +1285,14 @@ abstract class BaseFlintView extends ItemView {
 
   private renderLoading(): void {
     if (!this.loadingEl) return;
-    if (this.plugin.agent.isRunning) {
+    const agent = this.plugin.agent;
+    if (agent.isRunning) {
       this.loadingEl.style.display = "";
+      if (this.loadingLabelEl) this.loadingLabelEl.textContent = "inferring";
+      this.startLoadingTimer();
+    } else if (agent.isAutoTitling) {
+      this.loadingEl.style.display = "";
+      if (this.loadingLabelEl) this.loadingLabelEl.textContent = "titling";
       this.startLoadingTimer();
     } else {
       this.loadingEl.style.display = "none";

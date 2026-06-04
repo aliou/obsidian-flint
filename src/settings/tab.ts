@@ -8,6 +8,7 @@ import {
 import type FlintPlugin from "@/main";
 import { noticeError } from "@/utils/errors";
 import { renderAdvancedTab } from "./tabs/advanced";
+import { renderAutoNameTab } from "./tabs/auto-name";
 import { renderContextTab } from "./tabs/context";
 import { renderExportsTab } from "./tabs/exports";
 import { modelSettingDefinitions } from "./tabs/model";
@@ -76,9 +77,28 @@ export class FlintSettingsTab extends PluginSettingTab {
       },
       {
         type: "page",
-        name: "Tools",
-        desc: "Toggle which vault tools the agent can use.",
-        page: () => new FlintSettingPage(this, "Tools", renderToolsTab),
+        name: "Tools & Hooks",
+        desc: "Toggle vault tools and configure hooks.",
+        items: [
+          {
+            type: "page",
+            name: "Vault tools",
+            desc: "Toggle which vault tools the agent can use.",
+            page: () =>
+              new FlintSettingPage(this, "Vault tools", renderToolsTab),
+          },
+          {
+            type: "page",
+            name: "Auto-name sessions",
+            desc: "Automatically name sessions after the first turn.",
+            page: () =>
+              new FlintSettingPage(
+                this,
+                "Auto-name sessions",
+                renderAutoNameTab,
+              ),
+          },
+        ],
       },
       {
         type: "page",

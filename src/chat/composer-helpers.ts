@@ -75,6 +75,7 @@ export function parseSlashCommand(
   | { command: "compact"; args?: string }
   | { command: "reload" }
   | { command: "model" }
+  | { command: "name"; args?: string }
   | { command: "skill"; name: string; args?: string }
   | undefined {
   const compactMatch = text.match(/^\/compact(?:\s+([\s\S]*))?$/);
@@ -83,6 +84,9 @@ export function parseSlashCommand(
   if (/^\/reload$/.test(text)) return { command: "reload" };
 
   if (/^\/model$/.test(text)) return { command: "model" };
+
+  const nameMatch = text.match(/^\/name(?:\s+([\s\S]+))?$/);
+  if (nameMatch) return { command: "name", args: nameMatch[1] };
 
   const skillMatch = text.match(/^\/skill:([^\s]+)(?:\s+([\s\S]*))?$/);
   if (skillMatch?.[1]) {
