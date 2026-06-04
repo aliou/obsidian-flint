@@ -31,6 +31,9 @@ export default defineConfig(({ mode }) => ({
     ],
   },
   test: {
+    alias: {
+      obsidian: "./src/test/obsidian.ts",
+    },
     environment: "node",
     include: ["src/**/*.test.ts"],
     mockReset: true,

@@ -414,6 +414,7 @@ abstract class BaseFlintView extends ItemView {
 
     this.wikiLinkSuggestions = buildWikiLinkSuggestions(
       this.app.vault,
+      this.app.metadataCache,
       context.query,
     );
     if (this.wikiLinkSuggestions.length === 0) {

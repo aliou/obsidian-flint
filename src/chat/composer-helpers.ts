@@ -1,4 +1,9 @@
-import { normalizePath, type TFile, type Vault } from "obsidian";
+import {
+  type MetadataCache,
+  normalizePath,
+  type TFile,
+  type Vault,
+} from "obsidian";
 
 export type SlashCommandSuggestion = {
   command: string;
@@ -104,6 +109,7 @@ export function currentWikiLinkContext(
 
 export function buildWikiLinkSuggestions(
   vault: Vault,
+  metadataCache: MetadataCache,
   query: string,
 ): WikiLinkSuggestion[] {
   const normalized = query.toLowerCase().trim();
@@ -117,7 +123,7 @@ export function buildWikiLinkSuggestions(
     .slice(0, 5)
     .map((file) => ({
       file,
-      target: file.extension === "md" ? file.basename : file.name,
+      target: metadataCache.fileToLinktext(file, "", file.extension === "md"),
       label: file.name,
       directory: directoryPath(file.path),
     }));
