@@ -1,3 +1,3 @@
 export { ObsidianSessionRepo } from "./repo";
 export { ObsidianJsonlSessionStorage } from "./storage";
-export type { ObsidianSessionMetadata } from "./types";
+export type { FlintSessionMetadata } from "./types";

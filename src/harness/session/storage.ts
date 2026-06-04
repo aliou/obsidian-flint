@@ -5,11 +5,11 @@ import type {
 } from "@earendil-works/pi-agent-core";
 import { SessionError } from "@earendil-works/pi-agent-core";
 import type { App } from "obsidian";
-import type { ObsidianSessionMetadata } from "./types";
+import type { FlintSessionMetadata } from "./types";
 import { ensureParentDirs, now, shortId, updateLabelCache } from "./utils";
 
 export class ObsidianJsonlSessionStorage
-  implements SessionStorage<ObsidianSessionMetadata>
+  implements SessionStorage<FlintSessionMetadata>
 {
   private entries: SessionTreeEntry[] = [];
   private byId = new Map<string, SessionTreeEntry>();
@@ -19,7 +19,7 @@ export class ObsidianJsonlSessionStorage
   private constructor(
     private readonly app: App,
     private readonly path: string,
-    private readonly metadata: ObsidianSessionMetadata,
+    private readonly metadata: FlintSessionMetadata,
   ) {}
 
   static async create(
@@ -72,7 +72,7 @@ export class ObsidianJsonlSessionStorage
     return storage;
   }
 
-  async getMetadata(): Promise<ObsidianSessionMetadata> {
+  async getMetadata(): Promise<FlintSessionMetadata> {
     return this.metadata;
   }
 

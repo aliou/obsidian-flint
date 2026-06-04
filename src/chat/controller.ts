@@ -1,6 +1,7 @@
 import type {
   AgentHarness,
   AgentMessage,
+  Session,
   Skill,
   ThinkingLevel,
 } from "@earendil-works/pi-agent-core";
@@ -21,7 +22,7 @@ import { exportConversationMarkdown } from "@/export/service";
 import type { ObsidianExecutionEnv } from "@/harness/env";
 import type { ModelRegistry } from "@/harness/model-registry";
 import type {
-  ObsidianSessionMetadata,
+  FlintSessionMetadata,
   ObsidianSessionRepo,
 } from "@/harness/session";
 import { discoverSkillFolders } from "@/harness/skills/discovery";
@@ -35,6 +36,8 @@ import type {
 } from "@/settings/types";
 import { sessionNameFromMessages } from "@/settings/types";
 import { createObsidianHarness, type ResolvedCredential } from "./harness";
+
+type FlintSession = Session<FlintSessionMetadata>;
 
 export interface AgentControllerDeps {
   app: App;
@@ -51,6 +54,7 @@ export interface AgentControllerDeps {
 
 export class AgentController {
   harness?: AgentHarness;
+  session?: FlintSession;
   messages: AgentMessage[] = [];
   toolRuns = new Map<string, ToolRun>();
   toolsByName = new Map<string, ToolRenderAdapter>();
@@ -79,10 +83,11 @@ export class AgentController {
     return this.skills;
   }
 
-  async createHarness(metadata?: ObsidianSessionMetadata): Promise<void> {
+  async createHarness(metadata?: FlintSessionMetadata): Promise<void> {
     this.unsubscribeHarness?.();
     const result = await createObsidianHarness(this.deps, metadata);
     this.harness = result.harness;
+    this.session = result.session;
     this.currentSessionPath = result.currentSessionPath;
     this.currentSessionId = result.currentSessionId;
 
@@ -191,6 +196,7 @@ export class AgentController {
     this.unsubscribeHarness?.();
     this.unsubscribeHarness = undefined;
     this.harness = undefined;
+    this.session = undefined;
     this.messages = [];
     this.toolRuns.clear();
     this.toolsByName.clear();
@@ -265,6 +271,7 @@ export class AgentController {
     await sessionRepo.delete(metadata);
     if (path === this.currentSessionPath) {
       this.harness = undefined;
+      this.session = undefined;
       this.messages = [];
       this.toolRuns.clear();
       this.toolsByName.clear();

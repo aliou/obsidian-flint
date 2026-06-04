@@ -5,11 +5,11 @@ import type {
 import { Session, SessionError } from "@earendil-works/pi-agent-core";
 import { type App, normalizePath } from "obsidian";
 import { ObsidianJsonlSessionStorage } from "./storage";
-import type { ObsidianSessionMetadata } from "./types";
+import type { FlintSessionMetadata } from "./types";
 import { now } from "./utils";
 
 export class ObsidianSessionRepo
-  implements SessionRepo<ObsidianSessionMetadata, { id?: string }, void>
+  implements SessionRepo<FlintSessionMetadata, { id?: string }, void>
 {
   constructor(
     private readonly app: App,
@@ -18,7 +18,7 @@ export class ObsidianSessionRepo
 
   async create(
     options: { id?: string } = {},
-  ): Promise<Session<ObsidianSessionMetadata>> {
+  ): Promise<Session<FlintSessionMetadata>> {
     const sessionId = options.id ?? crypto.randomUUID();
     const path = normalizePath(
       `${this.root}/${now().replace(/[:.]/g, "-")}_${sessionId}.jsonl`,
@@ -32,8 +32,8 @@ export class ObsidianSessionRepo
   }
 
   async open(
-    metadata: ObsidianSessionMetadata,
-  ): Promise<Session<ObsidianSessionMetadata>> {
+    metadata: FlintSessionMetadata,
+  ): Promise<Session<FlintSessionMetadata>> {
     const storage = await ObsidianJsonlSessionStorage.open(
       this.app,
       metadata.path,
@@ -41,11 +41,11 @@ export class ObsidianSessionRepo
     return new Session(storage);
   }
 
-  async list(): Promise<ObsidianSessionMetadata[]> {
+  async list(): Promise<FlintSessionMetadata[]> {
     const exists = await this.app.vault.adapter.exists(this.root);
     if (!exists) return [];
     const listed = await this.app.vault.adapter.list(this.root);
-    const sessions: ObsidianSessionMetadata[] = [];
+    const sessions: FlintSessionMetadata[] = [];
     for (const path of listed.files.filter((file) => file.endsWith(".jsonl"))) {
       try {
         const storage = await ObsidianJsonlSessionStorage.open(this.app, path);
@@ -61,7 +61,7 @@ export class ObsidianSessionRepo
     );
   }
 
-  async delete(metadata: ObsidianSessionMetadata): Promise<void> {
+  async delete(metadata: FlintSessionMetadata): Promise<void> {
     const path = normalizePath(metadata.path);
     const root = normalizePath(this.root);
     if (!path.startsWith(`${root}/`) || !path.endsWith(".jsonl")) {
@@ -72,9 +72,9 @@ export class ObsidianSessionRepo
   }
 
   async fork(
-    source: ObsidianSessionMetadata,
+    source: FlintSessionMetadata,
     options: { entryId?: string; position?: "before" | "at"; id?: string },
-  ): Promise<Session<ObsidianSessionMetadata>> {
+  ): Promise<Session<FlintSessionMetadata>> {
     const sourceSession = await this.open(source);
     let sourceEntries: SessionTreeEntry[];
     if (!options.entryId) {

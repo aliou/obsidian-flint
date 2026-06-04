@@ -1,5 +1,6 @@
 import {
   AgentHarness,
+  type Session,
   type ThinkingLevel,
 } from "@earendil-works/pi-agent-core";
 import type { Api, Model } from "@earendil-works/pi-ai";
@@ -7,7 +8,7 @@ import type { App } from "obsidian";
 import type { ObsidianExecutionEnv } from "@/harness/env";
 import type { ModelRegistry } from "@/harness/model-registry";
 import type {
-  ObsidianSessionMetadata,
+  FlintSessionMetadata,
   ObsidianSessionRepo,
 } from "@/harness/session";
 import type { ObsidianTool } from "@/harness/tools";
@@ -36,6 +37,7 @@ export interface CreateObsidianHarnessDeps {
 
 export interface CreateObsidianHarnessResult {
   harness: AgentHarness;
+  session: Session<FlintSessionMetadata>;
   tools: ObsidianTool[];
   currentSessionPath: string;
   currentSessionId: string;
@@ -43,7 +45,7 @@ export interface CreateObsidianHarnessResult {
 
 export async function createObsidianHarness(
   deps: CreateObsidianHarnessDeps,
-  metadata?: ObsidianSessionMetadata,
+  metadata?: FlintSessionMetadata,
 ): Promise<CreateObsidianHarnessResult> {
   const { env, sessionRepo } = deps;
   const session = metadata
@@ -95,6 +97,7 @@ export async function createObsidianHarness(
 
   return {
     harness,
+    session,
     tools,
     currentSessionPath: sessionMeta.path,
     currentSessionId: sessionMeta.id,
