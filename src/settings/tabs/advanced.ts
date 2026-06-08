@@ -1,107 +1,93 @@
-import { normalizePath, Setting } from "obsidian";
-import { FolderSuggest } from "@/settings/views/folder-suggest";
-import type { SettingsTabContext } from "./types";
+import { normalizePath, type SettingDefinitionItem } from "obsidian";
+import type FlintPlugin from "@/main";
 
-export function renderAdvancedTab(
-  ctx: SettingsTabContext,
-  containerEl: HTMLElement,
-): void {
-  const { plugin } = ctx;
-  ctx.renderPageHeader(
-    containerEl,
-    "Advanced settings for sessions, compaction, and storage.",
-  );
-
-  new Setting(containerEl).setName("Session storage").setHeading();
-  new Setting(containerEl)
-    .setName("Storage path")
-    .setDesc(
-      "Vault-relative path where session files are stored. Changing this takes effect on the next new session. Existing sessions remain accessible.",
-    )
-    .addText((text) => {
-      text.setPlaceholder("Flint/Sessions");
-      text.setValue(plugin.store.settings.sessionStoragePath);
-      new FolderSuggest(ctx.app, text.inputEl, (path) => {
-        void updateSessionStoragePath(ctx, path);
-      });
-      text.onChange(async (value) => {
-        await updateSessionStoragePath(ctx, value);
-      });
-    });
-
-  new Setting(containerEl).setName("Compaction").setHeading();
-  new Setting(containerEl)
-    .setName("Enable compaction")
-    .setDesc("Allow automatic compaction of session history.")
-    .addToggle((toggle) =>
-      toggle
-        .setValue(plugin.store.settings.compactionSettings.enabled)
-        .onChange(async (val) => {
-          plugin.store.settings.compactionSettings.enabled = val;
-          await plugin.store.save();
-        }),
-    );
-
-  new Setting(containerEl)
-    .setName("Reserve tokens")
-    .setDesc("Tokens reserved for the compaction summary prompt and output.")
-    .addText((text) => {
-      text.inputEl.type = "number";
-      text.setValue(
-        String(plugin.store.settings.compactionSettings.reserveTokens),
-      );
-      text.onChange(async (val) => {
-        const n = Number.parseInt(val, 10);
-        if (!Number.isNaN(n) && n >= 0) {
-          plugin.store.settings.compactionSettings.reserveTokens = n;
-          await plugin.store.save();
-        }
-      });
-    });
-
-  new Setting(containerEl)
-    .setName("Keep recent tokens")
-    .setDesc("Approximate recent-context tokens to retain after compaction.")
-    .addText((text) => {
-      text.inputEl.type = "number";
-      text.setValue(
-        String(plugin.store.settings.compactionSettings.keepRecentTokens),
-      );
-      text.onChange(async (val) => {
-        const n = Number.parseInt(val, 10);
-        if (!Number.isNaN(n) && n >= 0) {
-          plugin.store.settings.compactionSettings.keepRecentTokens = n;
-          await plugin.store.save();
-        }
-      });
-    });
-
-  new Setting(containerEl)
-    .setName("Compaction custom prompt")
-    .setDesc(
-      "Optional custom instructions appended to the compaction summary prompt.",
-    )
-    .setClass("flint-stacked-setting")
-    .addTextArea((text) => {
-      text.inputEl.style.width = "100%";
-      text.inputEl.rows = 4;
-      text.setValue(plugin.store.settings.compactionCustomPrompt);
-      text.onChange(async (value) => {
-        plugin.store.settings.compactionCustomPrompt = value;
-        await plugin.store.save();
-      });
-    });
+export function advancedSettingDefinitions(
+  plugin: FlintPlugin,
+): SettingDefinitionItem[] {
+  return [
+    {
+      type: "group",
+      heading: "Session storage",
+      items: [
+        {
+          name: "Storage path",
+          desc: "Vault-relative path where session files are stored. Changing this takes effect on the next new session. Existing sessions remain accessible.",
+          control: {
+            type: "folder",
+            key: "sessionStoragePath",
+            defaultValue: "Flint/Sessions",
+            placeholder: "Flint/Sessions",
+            includeRoot: true,
+            validate: (value) => {
+              const normalized = normalizePath(value.trim());
+              if (!normalized || normalized === "/")
+                return "Choose a folder path.";
+            },
+          },
+        },
+      ],
+    },
+    {
+      type: "group",
+      heading: "Compaction",
+      items: [
+        {
+          name: "Enable compaction",
+          desc: "Allow automatic compaction of session history.",
+          control: {
+            type: "toggle",
+            key: "compaction.enabled",
+            defaultValue: true,
+          },
+        },
+        {
+          name: "Reserve tokens",
+          desc: "Tokens reserved for the compaction summary prompt and output.",
+          control: {
+            type: "number",
+            key: "compaction.reserveTokens",
+            defaultValue: 16384,
+            min: 0,
+            step: 1,
+          },
+        },
+        {
+          name: "Keep recent tokens",
+          desc: "Approximate recent-context tokens to retain after compaction.",
+          control: {
+            type: "number",
+            key: "compaction.keepRecentTokens",
+            defaultValue: 20000,
+            min: 0,
+            step: 1,
+          },
+        },
+        {
+          name: "Compaction custom prompt",
+          desc: "Optional custom instructions appended to the compaction summary prompt.",
+          render: (setting) => {
+            setting.setClass("flint-stacked-setting").addTextArea((text) => {
+              text.inputEl.rows = 4;
+              text.setValue(plugin.store.settings.compactionCustomPrompt);
+              text.onChange(async (value) => {
+                await plugin.store.update({ compactionCustomPrompt: value });
+              });
+            });
+          },
+        },
+      ],
+    },
+  ];
 }
 
-async function updateSessionStoragePath(
-  ctx: SettingsTabContext,
-  value: string,
+export async function setCompactionSetting(
+  plugin: FlintPlugin,
+  key: "enabled" | "reserveTokens" | "keepRecentTokens",
+  value: boolean | number,
 ): Promise<void> {
-  const normalized = normalizePath(value.trim());
-  if (!normalized || normalized === "/") return;
-  try {
-    await ctx.plugin.store.update({ sessionStoragePath: normalized });
-  } catch (error) {
-    ctx.notice(error);
-  }
+  plugin.store.settings.compactionSettings = {
+    ...plugin.store.settings.compactionSettings,
+    [key]: value,
+  };
+  await plugin.store.save();
 }

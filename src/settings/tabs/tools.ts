@@ -1,35 +1,35 @@
-import { Setting } from "obsidian";
+import type { SettingDefinitionItem } from "obsidian";
 import { VAULT_TOOL_DEFINITIONS } from "@/harness/tools";
-import type { SettingsTabContext } from "./types";
+import type FlintPlugin from "@/main";
 
-export function renderToolsTab(
-  ctx: SettingsTabContext,
-  containerEl: HTMLElement,
-): void {
-  const { plugin } = ctx;
-  ctx.renderPageHeader(
-    containerEl,
-    "Toggle which vault tools the agent can use.",
-  );
+export function toolsSettingDefinitions(): SettingDefinitionItem[] {
+  return [
+    {
+      type: "group",
+      heading: "Vault tools",
+      items: VAULT_TOOL_DEFINITIONS.map((tool) => ({
+        name: tool.label,
+        desc: tool.description,
+        control: {
+          type: "toggle" as const,
+          key: `tool:${tool.name}`,
+          defaultValue: true,
+        },
+      })),
+    },
+  ];
+}
 
-  new Setting(containerEl).setName("Vault tools").setHeading();
-
-  for (const tool of VAULT_TOOL_DEFINITIONS) {
-    new Setting(containerEl)
-      .setName(tool.label)
-      .setDesc(tool.description)
-      .addToggle((toggle) =>
-        toggle
-          .setValue(plugin.store.settings.enabledTools.includes(tool.name))
-          .onChange(async (enabled) => {
-            const current = new Set(plugin.store.settings.enabledTools);
-            if (enabled) current.add(tool.name);
-            else current.delete(tool.name);
-            const next = [...current];
-            plugin.store.settings.enabledTools = next;
-            await plugin.store.save();
-            await plugin.agent.updateEnabledTools(next);
-          }),
-      );
-  }
+export async function setToolEnabled(
+  plugin: FlintPlugin,
+  toolName: string,
+  enabled: boolean,
+): Promise<void> {
+  const current = new Set(plugin.store.settings.enabledTools);
+  if (enabled) current.add(toolName);
+  else current.delete(toolName);
+  const next = [...current];
+  plugin.store.settings.enabledTools = next;
+  await plugin.store.save();
+  await plugin.agent.updateEnabledTools(next);
 }

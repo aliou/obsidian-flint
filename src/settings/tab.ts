@@ -1,47 +1,21 @@
 import {
   type App,
   type IconName,
+  normalizePath,
   PluginSettingTab,
   type SettingDefinitionItem,
-  SettingPage,
 } from "obsidian";
 import type FlintPlugin from "@/main";
-import { noticeError } from "@/utils/errors";
-import { renderAdvancedTab } from "./tabs/advanced";
-import { renderAutoNameTab } from "./tabs/auto-name";
-import { renderContextTab } from "./tabs/context";
-import { renderExportsTab } from "./tabs/exports";
+import {
+  advancedSettingDefinitions,
+  setCompactionSetting,
+} from "./tabs/advanced";
+import { autoNameSettingDefinitions } from "./tabs/auto-name";
+import { contextSettingDefinitions } from "./tabs/context";
+import { exportSettingDefinitions, setExportSetting } from "./tabs/exports";
 import { modelSettingDefinitions } from "./tabs/model";
 import { providerSettingDefinitions } from "./tabs/providers";
-import { renderToolsTab } from "./tabs/tools";
-import type { SettingsTabContext } from "./tabs/types";
-
-type PageRenderer = (ctx: SettingsTabContext, containerEl: HTMLElement) => void;
-
-/**
- * Imperative sub-page wrapper for Obsidian 1.13.0's navigable settings API.
- * Each page reuses an existing render function and rebuilds its own container
- * on re-render, so the legacy `(ctx, containerEl)` renderers keep working.
- */
-class FlintSettingPage extends SettingPage {
-  constructor(
-    private readonly tab: FlintSettingsTab,
-    title: string,
-    private readonly render: PageRenderer,
-  ) {
-    super();
-    this.title = title;
-  }
-
-  display(): void {
-    this.containerEl.empty();
-    this.containerEl.addClass("flint-settings-page");
-    this.render(
-      this.tab.pageContext(() => this.display()),
-      this.containerEl,
-    );
-  }
-}
+import { setToolEnabled, toolsSettingDefinitions } from "./tabs/tools";
 
 export class FlintSettingsTab extends PluginSettingTab {
   icon: IconName = "flint-logo";
@@ -73,7 +47,7 @@ export class FlintSettingsTab extends PluginSettingTab {
         type: "page",
         name: "Context",
         desc: "System prompt, instructions file, and empty-state prompts.",
-        page: () => new FlintSettingPage(this, "Context", renderContextTab),
+        items: contextSettingDefinitions(this.app, this.plugin),
       },
       {
         type: "page",
@@ -84,19 +58,13 @@ export class FlintSettingsTab extends PluginSettingTab {
             type: "page",
             name: "Vault tools",
             desc: "Toggle which vault tools the agent can use.",
-            page: () =>
-              new FlintSettingPage(this, "Vault tools", renderToolsTab),
+            items: toolsSettingDefinitions(),
           },
           {
             type: "page",
             name: "Auto-name sessions",
             desc: "Automatically name sessions after the first turn.",
-            page: () =>
-              new FlintSettingPage(
-                this,
-                "Auto-name sessions",
-                renderAutoNameTab,
-              ),
+            items: autoNameSettingDefinitions(this.plugin),
           },
         ],
       },
@@ -104,29 +72,130 @@ export class FlintSettingsTab extends PluginSettingTab {
         type: "page",
         name: "Exports",
         desc: "Markdown export output and formatting.",
-        page: () => new FlintSettingPage(this, "Exports", renderExportsTab),
+        items: exportSettingDefinitions(),
       },
       {
         type: "page",
         name: "Advanced",
         desc: "Sessions, compaction, and other advanced options.",
-        page: () => new FlintSettingPage(this, "Advanced", renderAdvancedTab),
+        items: advancedSettingDefinitions(this.plugin),
       },
     ];
   }
 
-  pageContext(refresh: () => void): SettingsTabContext {
-    return {
-      app: this.app,
-      plugin: this.plugin,
-      display: refresh,
-      notice: (error) => noticeError(error),
-      renderPageHeader: (containerEl, description) => {
-        containerEl.createEl("p", {
-          cls: "setting-item-description flint-settings-intro",
-          text: description,
+  getControlValue(key: string): unknown {
+    const settings = this.plugin.store.settings;
+    if (key.startsWith("tool:")) {
+      return settings.enabledTools.includes(key.slice("tool:".length));
+    }
+
+    switch (key) {
+      case "systemPrompt":
+        return settings.systemPrompt;
+      case "agentFilePath":
+        return settings.agentFilePath;
+      case "emptyStateSuggestionsText":
+        return settings.emptyStateSuggestions.join("\n");
+      case "export.outputDirectory":
+        return settings.exportSettings.outputDirectory;
+      case "export.includeReasoning":
+        return settings.exportSettings.includeReasoning;
+      case "export.includeToolCalls":
+        return settings.exportSettings.includeToolCalls;
+      case "sessionStoragePath":
+        return settings.sessionStoragePath;
+      case "compaction.enabled":
+        return settings.compactionSettings.enabled;
+      case "compaction.reserveTokens":
+        return settings.compactionSettings.reserveTokens;
+      case "compaction.keepRecentTokens":
+        return settings.compactionSettings.keepRecentTokens;
+      case "compactionCustomPrompt":
+        return settings.compactionCustomPrompt;
+      case "autoName.enabled":
+        return settings.autoNameSettings.enabled;
+      case "autoName.prompt":
+        return settings.autoNameSettings.prompt;
+      default:
+        return super.getControlValue(key);
+    }
+  }
+
+  async setControlValue(key: string, value: unknown): Promise<void> {
+    if (key.startsWith("tool:")) {
+      await setToolEnabled(
+        this.plugin,
+        key.slice("tool:".length),
+        Boolean(value),
+      );
+      return;
+    }
+
+    switch (key) {
+      case "systemPrompt":
+        await this.plugin.store.update({ systemPrompt: String(value) });
+        this.plugin.store.notifyChange();
+        return;
+      case "agentFilePath":
+        await this.plugin.store.update({ agentFilePath: String(value).trim() });
+        this.plugin.agent.markSkillsStale();
+        return;
+      case "emptyStateSuggestionsText":
+        await this.plugin.store.update({
+          emptyStateSuggestions: String(value)
+            .split("\n")
+            .map((line) => line.trim())
+            .filter(Boolean),
         });
-      },
-    };
+        return;
+      case "export.outputDirectory":
+        await setExportSetting(this.plugin, {
+          outputDirectory: normalizePath(String(value).trim()),
+        });
+        return;
+      case "export.includeReasoning":
+        await setExportSetting(this.plugin, {
+          includeReasoning: Boolean(value),
+        });
+        return;
+      case "export.includeToolCalls":
+        await setExportSetting(this.plugin, {
+          includeToolCalls: Boolean(value),
+        });
+        return;
+      case "sessionStoragePath":
+        await this.plugin.store.update({
+          sessionStoragePath: normalizePath(String(value).trim()),
+        });
+        return;
+      case "compaction.enabled":
+        await setCompactionSetting(this.plugin, "enabled", Boolean(value));
+        return;
+      case "compaction.reserveTokens":
+        await setCompactionSetting(this.plugin, "reserveTokens", Number(value));
+        return;
+      case "compaction.keepRecentTokens":
+        await setCompactionSetting(
+          this.plugin,
+          "keepRecentTokens",
+          Number(value),
+        );
+        return;
+      case "compactionCustomPrompt":
+        await this.plugin.store.update({
+          compactionCustomPrompt: String(value),
+        });
+        return;
+      case "autoName.enabled":
+        this.plugin.store.settings.autoNameSettings.enabled = Boolean(value);
+        await this.plugin.store.save();
+        return;
+      case "autoName.prompt":
+        this.plugin.store.settings.autoNameSettings.prompt = String(value);
+        await this.plugin.store.save();
+        return;
+      default:
+        await super.setControlValue(key, value);
+    }
   }
 }

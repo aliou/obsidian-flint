@@ -6,6 +6,7 @@ import {
   SecretComponent,
   Setting,
   type SettingDefinitionItem,
+  type SettingDefinitionPage,
 } from "obsidian";
 import type FlintPlugin from "@/main";
 import type { CustomProviderConfig } from "@/settings/types";
@@ -65,9 +66,8 @@ export function providerSettingDefinitions(
       type: "group",
       heading: "Configured built-in providers",
       visible: () => configuredBuiltinProviderPages(app, plugin).length > 0,
-      items: [],
+      items: configuredBuiltinProviderPages(app, plugin),
     },
-    ...configuredBuiltinProviderPages(app, plugin),
     {
       type: "group",
       heading: "Custom providers",
@@ -88,9 +88,9 @@ export function providerSettingDefinitions(
             );
           },
         },
+        ...customProviderPages(app, plugin),
       ],
     },
-    ...customProviderPages(app, plugin),
   ];
 }
 
@@ -112,7 +112,7 @@ function renderSelectedBuiltin(
 function configuredBuiltinProviderPages(
   app: App,
   plugin: FlintPlugin,
-): SettingDefinitionItem[] {
+): SettingDefinitionPage[] {
   return getBuiltinProviders(plugin)
     .filter((provider) => hasBuiltinConfig(plugin, provider))
     .map((provider) => ({
@@ -171,7 +171,7 @@ function configuredBuiltinProviderPages(
 function customProviderPages(
   app: App,
   plugin: FlintPlugin,
-): SettingDefinitionItem[] {
+): SettingDefinitionPage[] {
   return plugin.store.settings.customProviders.map((provider) => ({
     type: "page" as const,
     name: provider.name ? `${provider.name} (${provider.id})` : provider.id,

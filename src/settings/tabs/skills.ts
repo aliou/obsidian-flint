@@ -1,12 +1,19 @@
 import {
+  type App,
   getFrontMatterInfo,
   normalizePath,
   parseYaml,
-  Setting,
+  type Setting,
+  type SettingDefinitionItem,
   TFile,
 } from "obsidian";
 import { discoverSkillFolders } from "@/harness/skills/discovery";
-import type { SettingsTabContext } from "./types";
+import type FlintPlugin from "@/main";
+
+type SettingsDataContext = {
+  app: App;
+  plugin: FlintPlugin;
+};
 
 const MAX_DESCRIPTION_LENGTH = 160;
 
@@ -16,42 +23,44 @@ type SkillPreview = {
   description: string;
 };
 
-export function renderSkillsSection(
-  ctx: SettingsTabContext,
-  containerEl: HTMLElement,
-): void {
-  new Setting(containerEl).setName("Skills").setHeading();
-  containerEl.createDiv({
-    cls: "setting-item-description flint-settings-intro",
-    text: "Skills are discovered automatically from every SKILL.md file in the vault. They are enabled by default; turn off the ones you do not want the agent to use.",
-  });
-
-  const folders = discoverSkillFolders(ctx.app);
-  if (folders.length === 0) {
-    containerEl.createDiv({
-      cls: "setting-item-description flint-empty-state",
-      text: "No skills found. Add a folder containing a SKILL.md file to the vault.",
-    });
-    return;
-  }
-
+export function skillsSettingDefinitions(
+  app: App,
+  plugin: FlintPlugin,
+): SettingDefinitionItem[] {
+  const folders = discoverSkillFolders(app);
   const disabled = new Set(
-    ctx.plugin.store.settings.disabledSkills.map((path) => normalizePath(path)),
+    plugin.store.settings.disabledSkills.map((path) => normalizePath(path)),
   );
 
-  const listEl = containerEl.createDiv({ cls: "flint-skills-list" });
-  for (const folder of folders) {
-    renderSkillRow(ctx, listEl, folder, !disabled.has(folder));
-  }
+  return [
+    {
+      type: "list",
+      heading: "Skills",
+      emptyState:
+        "No skills found. Add a folder containing a SKILL.md file to the vault.",
+      items: folders.map((folder) => ({
+        name: folder,
+        desc: folder,
+        render: (setting: Setting) => {
+          renderSkillSetting(
+            { app, plugin },
+            setting,
+            folder,
+            !disabled.has(folder),
+          );
+        },
+      })),
+    },
+  ];
 }
 
-function renderSkillRow(
-  ctx: SettingsTabContext,
-  containerEl: HTMLElement,
+function renderSkillSetting(
+  ctx: SettingsDataContext,
+  setting: Setting,
   folder: string,
   enabled: boolean,
 ): void {
-  const setting = new Setting(containerEl).setName(folder).addToggle((toggle) =>
+  setting.addToggle((toggle) =>
     toggle.setValue(enabled).onChange((value) => {
       void setSkillEnabled(ctx, folder, value);
     }),
@@ -66,7 +75,7 @@ function renderSkillRow(
 }
 
 async function updateSkillPreview(
-  ctx: SettingsTabContext,
+  ctx: SettingsDataContext,
   setting: Setting,
   folder: string,
 ): Promise<void> {
@@ -85,7 +94,7 @@ async function updateSkillPreview(
 }
 
 async function readSkillPreview(
-  ctx: SettingsTabContext,
+  ctx: SettingsDataContext,
   folder: string,
 ): Promise<SkillPreview> {
   const skillPath = normalizePath(`${folder}/SKILL.md`);
@@ -143,7 +152,7 @@ async function readSkillPreview(
 }
 
 async function setSkillEnabled(
-  ctx: SettingsTabContext,
+  ctx: SettingsDataContext,
   folder: string,
   enabled: boolean,
 ): Promise<void> {
